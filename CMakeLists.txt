@@ -54,10 +54,10 @@ set_target_properties(forward-dynamics-crtp PROPERTIES LINKER_LANGUAGE CXX)
 #target_link_libraries(forward-dynamics-crtp mysincos)
 #!------------------------------------------------------
 #! ForwardDynamicsCRTP example
-add_executable(example_CRTP_05 examples/example_CRTP_05.cpp)
-target_link_libraries (example_CRTP_05 forward-dynamics-crtp ${PACKAGE_NAME}-io)# geombd-core geombd-dynamics)
-#target_compile_options(example_CRTP_05 PRIVATE ${_CXX_FLAGS_RELEASE})
-##set_target_properties(example_CRTP_05 PROPERTIES COMPILE_FLAGS "-save-temps")
+add_executable(example_FwdDyn examples/example_FwdDyn.cpp)
+target_link_libraries (example_FwdDyn forward-dynamics-crtp ${PACKAGE_NAME}-io)
+#target_compile_options(example_FwdDyn PRIVATE ${_CXX_FLAGS_RELEASE})
+##set_target_properties(example_FwdDyn PROPERTIES COMPILE_FLAGS "-save-temps")
 #!------------------------------------------------------
 #!------------------------------------------------------
 #! ForwardDynamicsDiffCRTP
@@ -66,8 +66,13 @@ add_library(forward-dynamics-diff-crtp SHARED ${PROJECT_SOURCE_DIR}/include/geom
 set_target_properties(forward-dynamics-diff-crtp PROPERTIES LINKER_LANGUAGE CXX)
 #!------------------------------------------------------
 #! ForwardDynamicsDiffCRTP example
-add_executable(example_CRTP_06 examples/example_CRTP_06.cpp)
-target_link_libraries (example_CRTP_06 forward-dynamics-diff-crtp ${PACKAGE_NAME}-io)
+add_executable(example_FwdDynDiff examples/example_FwdDynDiff.cpp)
+target_link_libraries (example_FwdDynDiff forward-dynamics-diff-crtp ${PACKAGE_NAME}-io)
+
+#!------------------------------------------------------
+#! Forward Dynamics + Diff example
+add_executable(example_FwdDyn_plus_Diff examples/example_FwdDyn_plus_Diff.cpp)
+target_link_libraries (example_FwdDyn_plus_Diff forward-dynamics-crtp forward-dynamics-diff-crtp ${PACKAGE_NAME}-io)
 
 #!------------------------------------------------------
 #! Parser example
@@ -78,13 +83,14 @@ target_link_libraries (example_CRTP_06 forward-dynamics-diff-crtp ${PACKAGE_NAME
 
 # Toggle comment for creating the static library of geombd
 #--------------------------------------------------------
-file(GLOB geoParser ${PACKAGE_NAME}-io)
-file(GLOB fwdDyn ${PROJECT_SOURCE_DIR}/include/geombd/CRTP/ForwardDynamicsCRTP.hpp)
-file(GLOB fwdDynDiff ${PROJECT_SOURCE_DIR}/include/geombd/CRTP/DForwardDynamicsCRTP.hpp)
+file(GLOB src_io ${INC_FOLDER}/io/*.cpp)
+#file(GLOB geoParser ${PACKAGE_NAME}-io)
+#file(GLOB fwdDyn ${PROJECT_SOURCE_DIR}/include/geombd/CRTP/ForwardDynamicsCRTP.hpp)
+#file(GLOB fwdDynDiff ${PROJECT_SOURCE_DIR}/include/geombd/CRTP/DForwardDynamicsCRTP.hpp)
 
-ADD_LIBRARY( geombd STATIC ${fwdDyn} ${fwdDynDiff} ${geoParser} )
+ADD_LIBRARY( geombd STATIC ${src_io} )
 set_target_properties(geombd PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries( geombd
                       ${EIGEN3_LIBRARIES})
-#--------------------------------------------------------
+##--------------------------------------------------------
 

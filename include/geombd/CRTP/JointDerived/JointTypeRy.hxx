@@ -127,8 +127,8 @@ namespace geoCRTP{
     static ScalarType sqi, cqi;
     ::geo::SINCOS<ScalarType>(qi, &sqi, &cqi);
 
-    R.coeffRef(0,0) = cqi;  R.coeffRef(0,1) = -sqi;
-    R.coeffRef(1,0) = sqi;  R.coeffRef(1,1) =  cqi;
+    R.coeffRef(0,0) =  cqi;  R.coeffRef(0,2) = sqi;
+    R.coeffRef(2,0) = -sqi;  R.coeffRef(2,2) = cqi;
   }
 
 
@@ -140,16 +140,16 @@ namespace geoCRTP{
                            Eigen::MatrixBase<Vector6Type> & p_,
                            const Eigen::MatrixBase<Matrix6Type> & M_) {
 
-    S_i.template tail<1>()(0) = vi;
+    S_i.coeffRef(3) = vi;
 
     Matrix6Type & M = const_cast<Matrix6Type &>(M_.derived());
 
     ScalarType vi2 = vi * vi;
 
-    p_.coeffRef(0) = -M.coeff(1,5)*vi2;
-    p_.coeffRef(1) =  M.coeff(0,5)*vi2;
-    p_.coeffRef(3) = -M.coeff(4,5)*vi2;
-    p_.coeffRef(4) =  M.coeff(3,5)*vi2;
+    p_.coeffRef(0) =  M.coeff(2,4)*vi2;
+    p_.coeffRef(2) = -M.coeff(0,4)*vi2;
+    p_.coeffRef(3) =  M.coeff(5,4)*vi2;
+    p_.coeffRef(5) = -M.coeff(3,4)*vi2;
   }
 
 
@@ -185,26 +185,26 @@ namespace geoCRTP{
     Segment3 Down_ = S_i.template segment<3>(3);
 
     if(zeroFlag) {
-        Up_.noalias()   = R_.transpose()*Sup;
-      } else {
         Down_.noalias() = Sup - P_.cross(Sdown);  //tmp
         Up_.noalias()   = R_.transpose()*Down_;
+      } else {
+        Up_.noalias()   = R_.transpose()*Sup;
       }
 
     Down_.noalias() = R_.transpose()*Sdown;
 
-    Down_.coeffRef(2) += vi;
+    Down_.coeffRef(1) += vi;
 
     //! C bias
     //!------------------------------------------------------------------------------!//
     Segment3 Cup   = c_.template segment<3>(0);
-    Segment3 Cdown = c_.template segment<3>(3);
+    Segment3 Cdown = c_.template segment<3>(3);    
 
-    Cup.coeffRef(0) =  Up_.coeff(1)*vi;
-    Cup.coeffRef(1) = -Up_.coeff(0)*vi;
+    Cup.coeffRef(0) = -Up_.coeff(2)*vi;  // -ad(Sy) effect
+    Cup.coeffRef(2) =  Up_.coeff(0)*vi;
 
-    Cdown.coeffRef(0) =  Down_.coeff(1)*vi;
-    Cdown.coeffRef(1) = -Down_.coeff(0)*vi;
+    Cdown.coeffRef(0) = -Down_.coeff(2)*vi;
+    Cdown.coeffRef(2) =  Down_.coeff(0)*vi;
 
     //! P bias
     //!------------------------------------------------------------------------------!//
@@ -249,9 +249,9 @@ namespace geoCRTP{
     EIGEN_STATIC_ASSERT(Vector6Type::ColsAtCompileTime == 1,
                         YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX);
 
-    U_r = M_A_r.template rightCols<1>();
-    iD = 1 / U_r.template segment<1>(5)(0);
-    u = tau - P_A_r.template segment<1>(5)(0);
+    U_r = M_A_r.template col(4);
+    iD = 1 / U_r.coeff(4);
+    u = tau - P_A_r.coeff(4);
   }
 
 
@@ -315,14 +315,14 @@ namespace geoCRTP{
 
     typedef typename Matrix3Type::Scalar MyScalar;
     MyScalar sq, cq;
-    sq = R_.coeff(1,0);  cq = R_.coeff(0,0);
+    sq = R_.coeff(0,2);  cq = R_.coeff(0,0);
 
-    ::geo::Mat3ProjRz(sq, cq, Ai, Ao);
+    ::geo::Mat3ProjRy(sq, cq, Ai, Ao);
 
     Do.noalias() = R_*Bi; // tmp variable
     Co.noalias() = Do*R_.transpose();
 
-    ::geo::Mat3ProjRz(sq, cq, Di, Do);
+    ::geo::Mat3ProjRy(sq, cq, Di, Do);
 
     Bo = Co;
     if(P_z){
@@ -395,10 +395,10 @@ namespace geoCRTP{
     Segment3 AaDown = Acc_a.template segment<3>(3);
 
     if(zeroFlag) {
-        AaUp.noalias()   = R_r.transpose()*AjUp;
-      } else {
         AaDown.noalias() = AjUp - P_r.cross(AjDown);  //tmp
         AaUp.noalias()   = R_r.transpose()*AaDown;
+      } else {
+        AaUp.noalias()   = R_r.transpose()*AjUp;
       }
 
     AaDown.noalias() = R_r.transpose()*AjDown;
@@ -406,14 +406,13 @@ namespace geoCRTP{
     Acc_a.noalias() += c_r;
 
     //! Joint acceleration.
-    //!                            delete cross product
     //!------------------------------------------------------------------------------!//
     (*ddq) = iD * ( u - U_r.transpose()*Acc_a );
 
     //! Update spatial acceleration.
     //!------------------------------------------------------------------------------!//
     Acc_i_r = Acc_a;
-    Acc_i_r(5) += (*ddq);
+    Acc_i_r(4) += (*ddq);
 
   }
 
@@ -434,19 +433,22 @@ namespace geoCRTP{
 
     //! Acceleration bias.
     //!------------------------------------------------------------------------------!//
-    //! Acc_a = [ 0 0 9.81 0 0 0 ]^T
+    //! g = [ 0, 0, 9.81, 0, 0, 0 ]^T
+    //! Acc_a = Ad(G[Sx])*g = [ 0, 9.81*sq, 9.81*cq, 0, 0, 0 ]^T
+    ScalarType sq, cq;  sq = R_r.coeff(0,2);  cq = R_r.coeff(0,0);
+    Acc_i_r.setZero();
+    Acc_i_r.coeffRef(0) = -9.81*sq;  Acc_i_r.coeffRef(2) = 9.81*cq;
 
     //! Joint acceleration.
     //!------------------------------------------------------------------------------!//
     ScalarType ddq_;
-    ddq_ = u - 9.81*U_r.template segment<1>(2)(0);
+    ddq_ = u - U_r.transpose()*Acc_i_r;
     ddq_ *= iD;
     (*ddq) = ddq_;
 
     //! Update spatial acceleration.
     //!------------------------------------------------------------------------------!//
-    Acc_i_r.coeffRef(2) = 9.81;
-    Acc_i_r.coeffRef(5) = ddq_;
+    Acc_i_r.coeffRef(4) = ddq_;
   }
 
 

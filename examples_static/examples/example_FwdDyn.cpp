@@ -1,10 +1,10 @@
 /**
- *    \file examples/example_CRTP_05.cc
+ *    \file examples/example_FwdDyn.cc
  *    \author Alvaro Paz, Gustavo Arechavaleta
  *    \version 1.0
  *    \date 2020
  *
- *    Example to test the ENHANCED ABA Differentiation wrt state
+ *    Example to test the ABA
  */
 
 //#define EIGEN_RUNTIME_NO_MALLOC
@@ -19,7 +19,7 @@
 
 #include "geombd/io/parser.hpp"
 
-#define __FU_PATH_PREFIX__ "../GeoMBD/data/TROmodels/"
+#define __FU_PATH_PREFIX__ "../../../data/TROmodels/"
 std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_XYZ_python.urdf";
 
 //! Set time variables
@@ -67,31 +67,7 @@ int main(){
 
   std::cout<<"Forward dynamics = "<<t_total/M<<std::endl;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-//  Eigen::internal::set_is_malloc_allowed(false);
-//  Eigen::MatrixXd R1 = Eigen::MatrixXd::Random(23,23);
-//  Eigen::MatrixXd R2 = Eigen::MatrixXd::Random(23,23);
-//  R1 += R1*R2;
-//  Eigen::internal::set_is_malloc_allowed(true);
-
-//  Eigen::internal::set_is_malloc_allowed(true);
-
-//  std::cout<<"Forward dynamics = "<<t_total_00/M<<std::endl;
-
-
-
+//  std::cout<<"FD = "<<robotDynamics->ddq.transpose()<<std::endl;
 
   return 0;
 }

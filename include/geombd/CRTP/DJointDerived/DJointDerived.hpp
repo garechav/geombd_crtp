@@ -1,5 +1,5 @@
-#ifndef GEOMBD_JOINT_DERIVED_H
-#define GEOMBD_JOINT_DERIVED_H
+#ifndef GEOMBD_DIFFERENTIATED_JOINT_DERIVED_H
+#define GEOMBD_DIFFERENTIATED_JOINT_DERIVED_H
 
 #include "geombd/CRTP/utils/sincos.hxx"
 #include "geombd/CRTP/utils/functors.hxx"
@@ -8,4 +8,4 @@
 #include "DJointTypeRy.hxx"
 #include "DJointTypeRz.hxx"
 
-#endif // GEOMBD_JOINT_DERIVED_H
+#endif // GEOMBD_DIFFERENTIATED_JOINT_DERIVED_H

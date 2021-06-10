@@ -185,10 +185,10 @@ namespace geoCRTP{
     Segment3 Down_ = S_i.template segment<3>(3);
 
     if(zeroFlag) {
-        Up_.noalias()   = R_.transpose()*Sup;
-      } else {
         Down_.noalias() = Sup - P_.cross(Sdown);  //tmp
         Up_.noalias()   = R_.transpose()*Down_;
+      } else {
+        Up_.noalias()   = R_.transpose()*Sup;
       }
 
     Down_.noalias() = R_.transpose()*Sdown;
@@ -395,10 +395,10 @@ namespace geoCRTP{
     Segment3 AaDown = Acc_a.template segment<3>(3);
 
     if(zeroFlag) {
-        AaUp.noalias()   = R_r.transpose()*AjUp;
-      } else {
         AaDown.noalias() = AjUp - P_r.cross(AjDown);  //tmp
         AaUp.noalias()   = R_r.transpose()*AaDown;
+      } else {
+        AaUp.noalias()   = R_r.transpose()*AjUp;
       }
 
     AaDown.noalias() = R_r.transpose()*AjDown;
