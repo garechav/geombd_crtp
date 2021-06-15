@@ -29,6 +29,7 @@ set(CMAKE_CXX_STANDARD 17)
 #-mavx -march=native -O3
 #avx,avx2,fma
 set(CMAKE_CXX_FLAGS_RELEASE "-msse -msse2 -msse3 -mavx -march=native -O3 -pedantic -DNDEBUG")
+add_definitions(-DNDEBUG)
 
 
 #set(CMAKE_CXX_FLAGS_RELEASE "-mavx -march=native -O3 -ftree-vectorize -msse -msse2 -msse3 -fopt-info-vec-missed")
@@ -81,16 +82,13 @@ target_link_libraries (example_FwdDyn_plus_Diff forward-dynamics-crtp forward-dy
 #!------------------------------------------------------
 
 
-# Toggle comment for creating the static library of geombd
-#--------------------------------------------------------
-file(GLOB src_io ${INC_FOLDER}/io/*.cpp)
-#file(GLOB geoParser ${PACKAGE_NAME}-io)
-#file(GLOB fwdDyn ${PROJECT_SOURCE_DIR}/include/geombd/CRTP/ForwardDynamicsCRTP.hpp)
-#file(GLOB fwdDynDiff ${PROJECT_SOURCE_DIR}/include/geombd/CRTP/DForwardDynamicsCRTP.hpp)
-
-ADD_LIBRARY( geombd STATIC ${src_io} )
-set_target_properties(geombd PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries( geombd
-                      ${EIGEN3_LIBRARIES})
+## Toggle comment for creating the static library of geombd
 ##--------------------------------------------------------
+#file(GLOB src_io ${INC_FOLDER}/io/*.cpp)
+
+#ADD_LIBRARY( geombd STATIC ${src_io} )
+#set_target_properties(geombd PROPERTIES LINKER_LANGUAGE CXX)
+#target_link_libraries( geombd
+#                      ${EIGEN3_LIBRARIES})
+###--------------------------------------------------------
 

@@ -21,7 +21,7 @@
 #include "geombd/io/parser.hpp"
 
 
-#define __FU_PATH_PREFIX__ "../data/TROmodels/"
+#define __FU_PATH_PREFIX__ "../geombd_crtp/data/TROmodels/"
 //std::string urdf_dir = __FU_PATH_PREFIX__ "lwr.urdf"; //7
 std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_XYZ_python.urdf"; //24
 //std::string urdf_dir = __FU_PATH_PREFIX__ "HRP2.urdf"; //28
@@ -78,9 +78,9 @@ int main(){
   std::cout<<"Forward dynamics + D = "<<t_total/M<<std::endl;  //! Currently running at 108 micros and 125 expanding
 
 
-  auto ddq_crtp = robotDynamics->ddq;
+//  auto ddq_crtp = robotDynamics->ddq;
 //  std::cout<<"ddq = "<<ddq_crtp.cwiseAbs().sum()<<std::endl;
-  std::cout<<ddq_crtp.transpose()<<std::endl;
+//  std::cout<<ddq_crtp.transpose()<<std::endl;
 //  //!-------------------------------------------------------
 //  auto D_ddq_crtp = robotDynamics->D_ddq;
 //  std::cout << "D_ddq_crtp = "<< std::endl<< std::scientific << std::setprecision(20) << D_ddq_crtp<< std::endl;
