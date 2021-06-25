@@ -318,7 +318,14 @@ namespace geo{
 
     //! C bias
     //!------------------------------------------------------------------------------!//
-    c_ = adSz(S_i);
+    Segment3 Cup   = c_.template segment<3>(0);
+    Segment3 Cdown = c_.template segment<3>(3);
+
+    Cup.coeffRef(0) =  Up_.coeff(1);  // -ad(Sz) effect
+    Cup.coeffRef(1) = -Up_.coeff(0);
+
+    Cdown.coeffRef(0) =  Down_.coeff(1);
+    Cdown.coeffRef(1) = -Down_.coeff(0);
 
     //! Twist differentiation -> taking advantage of c bias computation.
     //!------------------------------------------------------------------------------!//
@@ -331,11 +338,17 @@ namespace geo{
     //!------------------------------------------------------------------------------!//
     D_Vector6Type D_c_aux;
     D_c_aux.noalias() = D_q_V_*vi;
-    D_q_c_ = adSz(D_c_aux);
+    D_q_c_.template row(0) =  D_c_aux.template row(1);  // -ad(Sz)* effect
+    D_q_c_.template row(1) = -D_c_aux.template row(0);
+    D_q_c_.template row(3) =  D_c_aux.template row(4);
+    D_q_c_.template row(4) = -D_c_aux.template row(3);
 
     D_c_aux.noalias() = D_dq_V_*vi;
     D_c_aux.template rightCols<1>() += S_i;
-    D_dq_c_ = adSz(D_c_aux);
+    D_dq_c_.template row(0) =  D_c_aux.template row(1);  // -ad(Sz)* effect
+    D_dq_c_.template row(1) = -D_c_aux.template row(0);
+    D_dq_c_.template row(3) =  D_c_aux.template row(4);
+    D_dq_c_.template row(4) = -D_c_aux.template row(3);
     //!------------------------------------------------------------------------------!//
 
     //! P bias

@@ -1,5 +1,5 @@
 /**
- *    \file examples/example_FwdDyn.cc
+ *    \file examples/example_FD_hrp2.cpp
  *    \author Alvaro Paz, Gustavo Arechavaleta
  *    \version 1.0
  *    \date 2020
@@ -20,7 +20,7 @@
 #include "geombd/io/parser.hpp"
 
 #define __FU_PATH_PREFIX__ "../../../data/TROmodels/"
-std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_XYZ_python.urdf";
+std::string urdf_dir = __FU_PATH_PREFIX__ "HRP2.urdf";
 
 //! Set time variables
 const int M = 100000;    // sample size;
@@ -65,7 +65,7 @@ int main(){
 
   //  Eigen::internal::set_is_malloc_allowed(true);
 
-  std::cout<<"Forward dynamics = "<<t_total/M<<std::endl;
+  std::cout<<"HRP2 Forward Dynamics = "<<t_total/M<<std::endl;
 
 //  std::cout<<"FD = "<<robotDynamics->ddq.transpose()<<std::endl;
 

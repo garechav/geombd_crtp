@@ -1,5 +1,5 @@
 /**
- *    \file examples/example_FwdDynDiff.cc
+ *    \file examples/example_D_FD_atlas.cpp
  *    \author Alvaro Paz, Gustavo Arechavaleta
  *    \version 1.0
  *    \date 2020
@@ -22,10 +22,7 @@
 
 
 #define __FU_PATH_PREFIX__ "../../../data/TROmodels/"
-//std::string urdf_dir = __FU_PATH_PREFIX__ "lwr.urdf"; //7
-std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_XYZ_python.urdf"; //24
-//std::string urdf_dir = __FU_PATH_PREFIX__ "HRP2.urdf"; //28
-//std::string urdf_dir = __FU_PATH_PREFIX__ "atlas.urdf"; //30
+std::string urdf_dir = __FU_PATH_PREFIX__ "atlas.urdf"; //30
 
 
 //! Set time variables
@@ -75,7 +72,7 @@ int main(){
 
   //  Eigen::internal::set_is_malloc_allowed(true);
 
-  std::cout<<"Forward dynamics + D = "<<t_total/M<<std::endl;
+  std::cout<<"Atlas Forward Dynamics + D = "<<t_total/M<<std::endl;
 
 
 //  auto ddq_crtp = robotDynamics->ddq;

@@ -22,28 +22,28 @@
 	   <parent link="LLEG_link5"/>
 	   <child link="LLEG_link4"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.10290"/>
-	   <axis xyz="0 0 1"/>
+	   <axis xyz="0 1 0"/>
 	   <limit upper="2.112528" lower="-0.092346" effort="0.0" velocity="1.0"/>
 	</joint>
 	<joint name="Joint4" type="revolute">
 	   <parent link="LLEG_link4"/>
 	   <child link="LLEG_link3"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.1"/>
-	   <axis xyz="1 0 0"/>
+	   <axis xyz="0 1 0"/>
 	   <limit upper="0.484090" lower="-1.535889" effort="0.0" velocity="1.0"/>
 	</joint>
 	<joint name="Joint5" type="revolute">
 	   <parent link="LLEG_link3"/>
 	   <child link="LLEG_link2"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-	   <axis xyz="0 1 0"/>
+	   <axis xyz="1 0 0"/>
 	   <limit upper="0.790477" lower="-0.379472" effort="0.0" velocity="1.0"/>
 	</joint>
 	<joint name="joint6" type="revolute">
 	   <parent link="LLEG_link2"/>
 	   <child link="LLEG_link1"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-	   <axis xyz="0 0 1"/>
+	   <axis xyz="1 0 0"/>
 	   <limit upper="0.740810" lower="-1.145303" effort="0.0" velocity="1.0"/>
 	</joint>
 
@@ -53,35 +53,35 @@
 	   <parent link="LLEG_link1"/>
 	   <child link="LARM_link1"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0 0.048 0.185"/>
-	   <axis xyz="1 0 0"/>
+	   <axis xyz="0 1 0"/>
 	   <limit upper="2.0857" lower="-2.0857" effort="0.0" velocity="1.0"/>
 	</joint>
 	<joint name="Joint8" type="revolute">
 	   <parent link="LARM_link1"/>
 	   <child link="LARM_link2"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-	   <axis xyz="0 1 0"/>
+	   <axis xyz="0 0 1"/>
 	   <limit upper="1.6494" lower="0.0087" effort="0.0" velocity="1.0"/>
 	</joint>
 	<joint name="Joint9" type="revolute">
 	   <parent link="LARM_link2"/>
 	   <child link="LARM_link3"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.105 0.015 0.0"/>
-	   <axis xyz="0 0 1"/>
+	   <axis xyz="1 0 0"/>
 	   <limit upper="2.0857" lower="-2.0857" effort="0.0" velocity="1.0"/>
 	</joint>
 	<joint name="Joint10" type="revolute">
 	   <parent link="LARM_link3"/>
 	   <child link="LARM_link4"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-	   <axis xyz="1 0 0"/>
+	   <axis xyz="0 0 1"/>
 	   <limit upper="-0.0087" lower="-1.5621" effort="0.0" velocity="1.0"/>
 	</joint>
 	<joint name="Joint11" type="revolute">
 	   <parent link="LARM_link4"/>
 	   <child link="LARM_link5"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.05595 0.0 0.0"/>
-	   <axis xyz="0 1 0"/>
+	   <axis xyz="1 0 0"/>
 	   <limit upper="1.8238" lower="-1.8238" effort="0.0" velocity="1.0"/>
 	</joint>
 
@@ -98,7 +98,7 @@
 	   <parent link="HEAD_link1"/>
 	   <child link="HEAD_link2"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-	   <axis xyz="1 0 0"/>
+	   <axis xyz="0 1 0"/>
 	   <limit upper="0.5149" lower="-0.6720" effort="0.0" velocity="1.0"/>
 	</joint>
 
@@ -129,14 +129,14 @@
 	   <parent link="RARM_link3"/>
 	   <child link="RARM_link4"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-	   <axis xyz="0 1 0"/>
+	   <axis xyz="0 0 1"/>
 	   <limit upper="1.5621" lower="0.0087" effort="0.0" velocity="1.0"/>
 	</joint>
 	<joint name="Joint18" type="revolute">
 	   <parent link="RARM_link4"/>
 	   <child link="RARM_link5"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.05595 0.0 0.0"/>
-	   <axis xyz="0 0 1"/>
+	   <axis xyz="1 0 0"/>
 	   <limit upper="1.8238" lower="-1.8238" effort="0.0" velocity="1.0"/>
 	</joint>
 
@@ -153,21 +153,21 @@
 	   <parent link="RLEG_link1"/>
 	   <child link="RLEG_link2"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-	   <axis xyz="0 1 0"/>
+	   <axis xyz="1 0 0"/>
 	   <limit upper="0.379472" lower="-0.790477" effort="0.0" velocity="1.0"/>
 	</joint>
 	<joint name="Joint21" type="revolute">
 	   <parent link="RLEG_link2"/>
 	   <child link="RLEG_link3"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-	   <axis xyz="0 0 1"/>
+	   <axis xyz="0 1 0"/>
 	   <limit upper="0.484090" lower="-1.535889" effort="0.0" velocity="1.0"/>
 	</joint>
 	<joint name="Joint22" type="revolute">
 	   <parent link="RLEG_link3"/>
 	   <child link="RLEG_link4"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.1"/>
-	   <axis xyz="1 0 0"/>
+	   <axis xyz="0 1 0"/>
 	   <limit upper="2.120198" lower="-0.103083" effort="0.0" velocity="1.0"/>
 	</joint>
 	<joint name="Joint23" type="revolute">
@@ -181,7 +181,7 @@
 	   <parent link="RLEG_link5"/>
 	   <child link="RLEG_link6"/>
 	   <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-	   <axis xyz="0 0 1"/>
+	   <axis xyz="1 0 0"/>
 	   <limit upper="0.397935" lower="-0.768992" effort="0.0" velocity="1.0"/>
 	</joint>
 
