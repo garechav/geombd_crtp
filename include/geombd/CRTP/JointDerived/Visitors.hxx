@@ -13,19 +13,20 @@ namespace geoCRTP{
 
   //! Forward Kinematics Visitor
   //!------------------------------------------------------------------------------!//
-  template<typename ScalarType, typename Matrix3Type>
+  template<typename ScalarType, typename Vector3Type, typename Matrix3Type>
   class FwdKin_visitor : public boost::static_visitor<int> {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    FwdKin_visitor( ) : R(nullptr) {}
+    FwdKin_visitor( ) : R(nullptr), S(nullptr) {}
 
     ScalarType qi;
+    Vector3Type* S;
     Matrix3Type* R;
 
     template<typename Derived>
     int operator()(CRTPInterface<Derived> & BaseType) const {
-        BaseType.FwdKin(qi, (*R).derived());
+        BaseType.FwdKin(qi, (*S).derived(), (*R).derived());
       return 0;
     }
 
@@ -34,21 +35,21 @@ namespace geoCRTP{
 
   //! Visitor for Twist and bias elements at root
   //!------------------------------------------------------------------------------!//
-  template<typename ScalarType, typename Vector6Type, typename Matrix6Type>
+  template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type>
   class TCP_root_visitor : public boost::static_visitor<int> {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    TCP_root_visitor( ) : S_i(nullptr), p_(nullptr), M_(nullptr) {}
+    TCP_root_visitor( ) : S(nullptr), S_i(nullptr), p_(nullptr), M_(nullptr) {}
 
     //! Members
-    ScalarType vi;  Vector6Type* S_i;  Vector6Type* p_;  Matrix6Type* M_;
+    ScalarType vi;  Vector3Type* S;  Vector6Type* S_i;  Vector6Type* p_;  Matrix6Type* M_;
 
     //! Method -> member function
     template<typename Derived>
     int operator()(CRTPInterface<Derived> & BaseType) const {
-        BaseType.TCP_root(vi, (*S_i).derived(), (*p_).derived(), (*M_).derived());
+        BaseType.TCP_root(vi, (*S).derived(), (*S_i).derived(), (*p_).derived(), (*M_).derived());
       return 0;
     }
 
@@ -64,18 +65,18 @@ namespace geoCRTP{
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    TwCbPb_visitor( ) : R_(nullptr), P_(nullptr), S_j(nullptr), M_(nullptr),
-                        S_i(nullptr), c_(nullptr), p_(nullptr) {}
+    TwCbPb_visitor( ) : S(nullptr), R_(nullptr), P_(nullptr), S_j(nullptr),
+                        M_(nullptr), S_i(nullptr), c_(nullptr), p_(nullptr) {}
 
     //! Members
     bool zeroFlag;
-    ScalarType vi;    Matrix3Type* R_;   Vector3Type* P_;  Vector6Type* S_j;
-    Matrix6Type* M_;  Vector6Type* S_i;  Vector6Type* c_;  Vector6Type* p_;
+    ScalarType vi;    Vector3Type* S;    Matrix3Type* R_;   Vector3Type* P_;  Vector6Type* S_j;
+    Matrix6Type* M_;  Vector6Type* S_i;  Vector6Type* c_;   Vector6Type* p_;
 
     //! Method -> member function
     template<typename Derived>
     int operator()(CRTPInterface<Derived> & BaseType) const {
-      BaseType.TwCbPb(zeroFlag, vi, (*R_).derived(),  (*P_).derived(), (*S_j).derived(), (*M_).derived(),
+      BaseType.TwCbPb(zeroFlag, vi, (*S).derived(), (*R_).derived(),  (*P_).derived(), (*S_j).derived(), (*M_).derived(),
                       (*S_i).derived(), (*c_).derived(), (*p_).derived());
       return 0;
     }
@@ -85,23 +86,23 @@ namespace geoCRTP{
 
   //! Visitor for U, u & invD expressions
   //!------------------------------------------------------------------------------!//
-  template<typename ScalarType, typename Vector6Type, typename Matrix6Type>
+  template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type>
   class UuiD_visitor : public boost::static_visitor<int> {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    UuiD_visitor( ) : u(nullptr), iD(nullptr), U_(nullptr), P_A_(nullptr), M_A_(nullptr) {}
+    UuiD_visitor( ) : u(nullptr), iD(nullptr), S(nullptr), U_(nullptr), P_A_(nullptr), M_A_(nullptr) {}
 
     //! Members
-    ScalarType* u; ScalarType* iD; ScalarType tau;
+    ScalarType* u;    ScalarType* iD;     ScalarType tau;     Vector3Type* S;
     Vector6Type* U_;  Vector6Type* P_A_;  Matrix6Type* M_A_;
 
     //! Method -> member function
     template<typename Derived>
     int operator()(CRTPInterface<Derived> & BaseType) const {
       ScalarType & u_ = (*u);  ScalarType & iD_ = (*iD);
-      BaseType.UuiD(u_, iD_, tau, (*U_).derived(), (*P_A_).derived(), (*M_A_).derived());
+      BaseType.UuiD(u_, iD_, tau, (*S).derived(), (*U_).derived(), (*P_A_).derived(), (*M_A_).derived());
       return 0;
     }
 
@@ -110,24 +111,24 @@ namespace geoCRTP{
 
   //! Visitor for preparing inertial expressions
   //!------------------------------------------------------------------------------!//
-  template<typename ScalarType, typename Vector6Type, typename Matrix6Type>
+  template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type>
   class PreIner_visitor : public boost::static_visitor<int> {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    PreIner_visitor( ) : U_(nullptr), c_(nullptr), P_a_(nullptr),
+    PreIner_visitor( ) : S(nullptr), U_(nullptr), c_(nullptr), P_a_(nullptr),
                          M_a_(nullptr), P_A_(nullptr), M_A_(nullptr) {}
 
     //! Members
-    ScalarType u, iD;
+    ScalarType u, iD;   Vector3Type* S;
     Vector6Type* U_;    Vector6Type* c_;    Vector6Type* P_a_;
     Matrix6Type* M_a_;  Vector6Type* P_A_;  Matrix6Type* M_A_;
 
     //! Method -> member function
     template<typename Derived>
     int operator()(CRTPInterface<Derived> & BaseType) const {
-      BaseType.PreIner(u, iD, (*U_).derived(), (*c_).derived(), (*P_a_).derived(),
+      BaseType.PreIner(u, iD, (*S).derived(), (*U_).derived(), (*c_).derived(), (*P_a_).derived(),
                        (*M_a_).derived(), (*P_A_).derived(), (*M_A_).derived());
       return 0;
     }
@@ -143,10 +144,10 @@ namespace geoCRTP{
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    InerProj_visitor( ) : P_(nullptr), R_(nullptr), P_a_(nullptr), P_A_(nullptr), M_a_(nullptr), M_A_(nullptr) {}
+    InerProj_visitor( ) : S(nullptr), P_(nullptr), R_(nullptr), P_a_(nullptr), P_A_(nullptr), M_a_(nullptr), M_A_(nullptr) {}
 
     //! Members
-    bool P_z;
+    bool P_z;           Vector3Type* S;
     Vector3Type* P_;    Matrix3Type* R_;
     Vector6Type* P_a_;  Vector6Type* P_A_;
     Matrix6Type* M_a_;  Matrix6Type* M_A_;
@@ -154,7 +155,7 @@ namespace geoCRTP{
     //! Method -> member function
     template<typename Derived>
     int operator()(CRTPInterface<Derived> & BaseType) const {
-      BaseType.InerProj(P_z, (*P_).derived(), (*R_).derived(), (*P_a_).derived(), (*P_A_).derived(),
+      BaseType.InerProj(P_z, (*S).derived(), (*P_).derived(), (*R_).derived(), (*P_a_).derived(), (*P_A_).derived(),
                         (*M_a_).derived(), (*M_A_).derived());
       return 0;
     }
@@ -170,21 +171,21 @@ namespace geoCRTP{
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    Accel_visitor( ) : ddq(nullptr), P_(nullptr), R_(nullptr), c_(nullptr),
-      U_(nullptr), Acc_i_(nullptr), Acc_j_(nullptr) {}
+    Accel_visitor( ) : ddq(nullptr), S_(nullptr), P_(nullptr), R_(nullptr), c_(nullptr),
+                       U_(nullptr), Acc_i_(nullptr), Acc_j_(nullptr) {}
 
     //! Members
     bool zeroFlag;
     ScalarType u, iD;
     ScalarType* ddq;
 
-    Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* c_;
+    Vector3Type* S_;  Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* c_;
     Vector6Type* U_;  Vector6Type* Acc_i_;  Vector6Type* Acc_j_;
 
     //! Method -> member function
     template<typename Derived>
     int operator()(CRTPInterface<Derived> & BaseType) const {
-      BaseType.Accel(zeroFlag, u, iD, ddq, (*P_).derived(), (*R_).derived(), (*c_).derived(),
+      BaseType.Accel(zeroFlag, u, iD, ddq, (*S_).derived(), (*P_).derived(), (*R_).derived(), (*c_).derived(),
                      (*U_).derived(), (*Acc_i_).derived(), (*Acc_j_).derived());
       return 0;
     }
@@ -200,18 +201,18 @@ namespace geoCRTP{
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    Accel_root_visitor( ) : ddq(nullptr), P_(nullptr), R_(nullptr), U_(nullptr), Acc_i_(nullptr) {}
+    Accel_root_visitor( ) : ddq(nullptr), S_(nullptr), P_(nullptr), R_(nullptr), U_(nullptr), Acc_i_(nullptr) {}
 
     //! Members
     ScalarType u, iD;
     ScalarType* ddq;
 
-    Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* U_;  Vector6Type* Acc_i_;
+    Vector3Type* S_;  Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* U_;  Vector6Type* Acc_i_;
 
     //! Method -> member function
     template<typename Derived>
     int operator()(CRTPInterface<Derived> & BaseType) const {
-      BaseType.AccelRoot(u, iD, ddq, (*P_).derived(), (*R_).derived(), (*U_).derived(), (*Acc_i_).derived());
+      BaseType.AccelRoot(u, iD, ddq, (*S_).derived(), (*P_).derived(), (*R_).derived(), (*U_).derived(), (*Acc_i_).derived());
       return 0;
     }
 

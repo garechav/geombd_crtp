@@ -16,16 +16,18 @@ namespace geoCRTP{
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! FK Forward Declaration.
-    template<typename ScalarType, typename Matrix3Type>
+    template<typename ScalarType, typename Vector3Type, typename Matrix3Type>
     inline static void
     runFK(const ScalarType & qi,
+          typename Eigen::MatrixBase<Vector3Type> & S,
           typename Eigen::MatrixBase<Matrix3Type> & R);
 
 
     //! TwCbPb at Root Forward Declaration.
-    template<typename ScalarType, typename Vector6Type, typename Matrix6Type>
+    template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type>
     inline static void
     runTCP_root(const ScalarType & vi,
+                const Eigen::MatrixBase<Vector3Type> & S,
                 Eigen::MatrixBase<Vector6Type> & S_i,
                 Eigen::MatrixBase<Vector6Type> & p_,
                 const Eigen::MatrixBase<Matrix6Type> & M_);
@@ -37,6 +39,7 @@ namespace geoCRTP{
     inline static void
     runTwCbPb(bool zeroFlag,
               const ScalarType & vi,
+              const Eigen::MatrixBase<Vector3Type> & S,
               const Eigen::MatrixBase<Matrix3Type> & R_,
               const Eigen::MatrixBase<Vector3Type> & P_,
               const Eigen::MatrixBase<Vector6Type> & S_l,
@@ -47,21 +50,23 @@ namespace geoCRTP{
 
 
     //! UuinvD Forward Declaration.
-    template<typename ScalarType, typename Vector6Type, typename Matrix6Type>
+    template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type>
     inline static void
     runUuiD(ScalarType & u,
             ScalarType & iD,
             const ScalarType tau,
+            const Eigen::MatrixBase<Vector3Type> & S,
             Eigen::MatrixBase<Vector6Type> & U_r,
             const Eigen::MatrixBase<Vector6Type> & P_A_r,
             const Eigen::MatrixBase<Matrix6Type> & M_A_r);
 
 
     //! Preparing Inertias Forward Declaration.
-    template<typename ScalarType, typename Vector6Type, typename Matrix6Type>
+    template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type>
     inline static void
     runPreIner(ScalarType u,
                ScalarType iD,
+               const Eigen::MatrixBase<Vector3Type> & S,
                const Eigen::MatrixBase<Vector6Type> & U_r,
                const Eigen::MatrixBase<Vector6Type> & c_r,
                Eigen::MatrixBase<Vector6Type> & P_a_r,
@@ -74,6 +79,7 @@ namespace geoCRTP{
     template<typename Vector3Type, typename Matrix3Type, typename Vector6Type, typename Matrix6Type>
     inline static void
     runInerProj(bool P_z,
+                const Eigen::MatrixBase<Vector3Type> & S,
                 const Eigen::MatrixBase<Vector3Type> & P_r,
                 const Eigen::MatrixBase<Matrix3Type> & R_r,
                 const Eigen::MatrixBase<Vector6Type> & P_a_r,
@@ -89,6 +95,7 @@ namespace geoCRTP{
              ScalarType u,
              ScalarType iD,
              ScalarType* ddq,
+             const Eigen::MatrixBase<Vector3Type> & S,
              const Eigen::MatrixBase<Vector3Type> & P_r,
              const Eigen::MatrixBase<Matrix3Type> & R_r,
              const Eigen::MatrixBase<Vector6Type> & c_r,
@@ -103,6 +110,7 @@ namespace geoCRTP{
     runAccelRoot(ScalarType u,
                  ScalarType iD,
                  ScalarType* ddq,
+                 const Eigen::MatrixBase<Vector3Type> & S,
                  const Eigen::MatrixBase<Vector3Type> & P_r,
                  const Eigen::MatrixBase<Matrix3Type> & R_r,
                  const Eigen::MatrixBase<Vector6Type> & U_r,
@@ -120,9 +128,10 @@ namespace geoCRTP{
   //! Forward Kinematics Declaration
   //! EIGEN_ASM_COMMENT("MyBegin");
   //!------------------------------------------------------------------------------!//
-  template<typename ScalarType, typename Matrix3Type>
+  template<typename ScalarType, typename Vector3Type, typename Matrix3Type>
   inline void
   JointTypeRy::runFK(const ScalarType & qi,
+                     typename Eigen::MatrixBase<Vector3Type> & S,
                      typename Eigen::MatrixBase<Matrix3Type> & R) {
     static ScalarType sqi, cqi;
     ::geo::SINCOS<ScalarType>(qi, &sqi, &cqi);
@@ -133,9 +142,10 @@ namespace geoCRTP{
 
 
   //! TwCbPb at Root Declaration.
-  template<typename ScalarType, typename Vector6Type, typename Matrix6Type>
+  template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type>
   inline void
   JointTypeRy::runTCP_root(const ScalarType & vi,
+                           const Eigen::MatrixBase<Vector3Type> & S,
                            Eigen::MatrixBase<Vector6Type> & S_i,
                            Eigen::MatrixBase<Vector6Type> & p_,
                            const Eigen::MatrixBase<Matrix6Type> & M_) {
@@ -161,6 +171,7 @@ namespace geoCRTP{
   inline void
   JointTypeRy::runTwCbPb(bool zeroFlag,
                          const ScalarType & vi,
+                         const Eigen::MatrixBase<Vector3Type> & S,
                          const Eigen::MatrixBase<Matrix3Type> & R_,
                          const Eigen::MatrixBase<Vector3Type> & P_,
                          const Eigen::MatrixBase<Vector6Type> & S_l,
@@ -237,11 +248,12 @@ namespace geoCRTP{
 //  EIGEN_ALWAYS_INLINE EIGEN_DEVICE_FUNC
 
   //! Implementation for U, u & invD.
-  template<typename ScalarType, typename Vector6Type, typename Matrix6Type>
+  template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type>
   inline void
   JointTypeRy::runUuiD(ScalarType & u,
                        ScalarType & iD,
                        const ScalarType tau,
+                       const Eigen::MatrixBase<Vector3Type> & S,
                        Eigen::MatrixBase<Vector6Type> & U_r,
                        const Eigen::MatrixBase<Vector6Type> & P_A_r,
                        const Eigen::MatrixBase<Matrix6Type> & M_A_r) {
@@ -256,10 +268,11 @@ namespace geoCRTP{
 
 
   //! Implementation for preparing inertial expressions.
-  template<typename ScalarType, typename Vector6Type, typename Matrix6Type>
+  template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type>
   inline void
   JointTypeRy::runPreIner(ScalarType u,
                           ScalarType iD,
+                          const Eigen::MatrixBase<Vector3Type> & S,
                           const Eigen::MatrixBase<Vector6Type> & U_r,
                           const Eigen::MatrixBase<Vector6Type> & c_r,
                           Eigen::MatrixBase<Vector6Type> & P_a_r,
@@ -289,6 +302,7 @@ namespace geoCRTP{
   template<typename Vector3Type, typename Matrix3Type, typename Vector6Type, typename Matrix6Type>
   inline void
   JointTypeRy::runInerProj(bool P_z,
+                           const Eigen::MatrixBase<Vector3Type> & S,
                            const Eigen::MatrixBase<Vector3Type> & P_,
                            const Eigen::MatrixBase<Matrix3Type> & R_,
                            const Eigen::MatrixBase<Vector6Type> & P_a_r,
@@ -370,6 +384,7 @@ namespace geoCRTP{
                         ScalarType u,
                         ScalarType iD,
                         ScalarType* ddq,
+                        const Eigen::MatrixBase<Vector3Type> & S,
                         const Eigen::MatrixBase<Vector3Type> & P_r,
                         const Eigen::MatrixBase<Matrix3Type> & R_r,
                         const Eigen::MatrixBase<Vector6Type> & c_r,
@@ -423,6 +438,7 @@ namespace geoCRTP{
   JointTypeRy::runAccelRoot(ScalarType u,
                             ScalarType iD,
                             ScalarType* ddq,
+                            const Eigen::MatrixBase<Vector3Type> & S,
                             const Eigen::MatrixBase<Vector3Type> & P_r,
                             const Eigen::MatrixBase<Matrix3Type> & R_r,
                             const Eigen::MatrixBase<Vector6Type> & U_r,
@@ -434,7 +450,7 @@ namespace geoCRTP{
     //! Acceleration bias.
     //!------------------------------------------------------------------------------!//
     //! g = [ 0, 0, 9.81, 0, 0, 0 ]^T
-    //! Acc_a = Ad(G[Sx])*g = [ 0, 9.81*sq, 9.81*cq, 0, 0, 0 ]^T
+    //! Acc_a = Ad(G[Sy])*g = [ -9.81*sq, 0, 9.81*cq, 0, 0, 0 ]^T
     ScalarType sq, cq;  sq = R_r.coeff(0,2);  cq = R_r.coeff(0,0);
     Acc_i_r.setZero();
     Acc_i_r.coeffRef(0) = -9.81*sq;  Acc_i_r.coeffRef(2) = 9.81*cq;

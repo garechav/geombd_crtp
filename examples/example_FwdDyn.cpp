@@ -20,7 +20,7 @@
 #include "geombd/io/parser.hpp"
 
 #define __FU_PATH_PREFIX__ "../data/TROmodels/"
-std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_XYZ_python.urdf";
+std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_python.urdf";
 
 //! Set time variables
 const int M = 100000;    // sample size;
