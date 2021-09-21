@@ -149,9 +149,11 @@ namespace geoCRTP
     FwdKin_visitor<ScalarType, Vector3r, Matrix3r> visitorFK;
     TCP_root_visitor<ScalarType, Vector3r, SpatialVector, SpatialMatrix> TCP_rootVis;
     TwCbPb_visitor<ScalarType, Matrix3r, SpatialMatrix, Vector3r, SpatialVector> TwCbPbVis;
+
     UuiD_visitor<ScalarType, Vector3r, SpatialVector, SpatialMatrix> UuiDVis;
     PreIner_visitor<ScalarType, Vector3r, SpatialVector, SpatialMatrix> PreInerVis;
     InerProj_visitor<Vector3r, Matrix3r, SpatialVector, SpatialMatrix> InerProjVis;
+
     Accel_visitor<ScalarType, Vector3r, Matrix3r, SpatialVector> AccelVis;
     Accel_root_visitor<ScalarType, Vector3r, Matrix3r, SpatialVector> Accel_rootVis;
 

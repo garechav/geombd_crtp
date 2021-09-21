@@ -162,6 +162,8 @@ namespace geo {
           //! Handling screw axes
           //!-------------------------------------------------------
           Vector3r axis = joint->axis;
+          Screw_w.push_back(axis);
+
           if (joint->type == Joint::joint_type::prismatic) {
               D_dq_V[i-1].template rightCols<1>().template segment<3>(0) = axis;
               //!-------------------------------------------------------
@@ -180,6 +182,10 @@ namespace geo {
               //!-------------------------------------------------------
               if((real_t)axis(2) == 1) {
                   JointTypesVec.push_back( D_JointTypeRz{} );
+                }
+              //!-------------------------------------------------------
+              if((real_t)axis(1) != 0 && (real_t)axis(2) != 0) {
+                  JointTypesVec.push_back( D_JointTypeRxyz{} );
                 }
 
             }
@@ -211,14 +217,14 @@ namespace geo {
     std::vector< index_t > parent;
 
     //! Joint-types variant
-    typedef boost::variant<D_JointTypeRx, D_JointTypeRy, D_JointTypeRz> CV;
+    typedef boost::variant<D_JointTypeRx, D_JointTypeRy, D_JointTypeRz, D_JointTypeRxyz> CV;
 
     //! Joint-types vector
     std::vector< CV > JointTypesVec;
     typename std::vector< CV >::iterator JointTypesIter;
 
-    D_FwdKin_visitor<ScalarType, Matrix3r> visitorFK;
-    D_TCP_root_visitor<ScalarType, SpatialVector, SpatialMatrix, D_SpatialVector> TCP_rootVis;
+    D_FwdKin_visitor<ScalarType, Vector3r, Matrix3r> visitorFK;
+    D_TCP_root_visitor<ScalarType, Vector3r, SpatialVector, SpatialMatrix, D_SpatialVector> TCP_rootVis;
     D_TwCbPb_visitor<ScalarType, Matrix3r, SpatialMatrix, Vector3r, SpatialVector, D_SpatialVector> TwCbPbVis;
 
     D_InertiaLeaf_visitor<ScalarType, Vector3r, Matrix3r, SpatialVector, SpatialMatrix, RowVectorXr, D_SpatialVector, D_SpatialMatrix> InerLeafVis;
@@ -232,6 +238,7 @@ namespace geo {
     PINOCCHIO_ALIGNED_STD_VECTOR( Matrix3r ) Rot;
     PINOCCHIO_ALIGNED_STD_VECTOR( Vector3r ) TransConst;
     PINOCCHIO_ALIGNED_STD_VECTOR( Matrix3r ) RotConst;
+    PINOCCHIO_ALIGNED_STD_VECTOR( Vector3r ) Screw_w;
     PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) Twists;
     PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) Cbias;
     PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) Pbias;
@@ -296,15 +303,15 @@ namespace geo {
       for ( JointTypesIter = JointTypesVec.begin(); JointTypesIter != JointTypesVec.end(); JointTypesIter++ ){
           //! Forward kinematics
           //!-------------------------------------------------------
-          visitorFK.qi = q(ID);  visitorFK.R = &Rot[ID];
+          visitorFK.qi = q(ID);  visitorFK.S = &Screw_w[ID];  visitorFK.R = &Rot[ID];
           boost::apply_visitor( visitorFK, *JointTypesIter );
 
           IDj = parent[ID];
           //! Twist and c, p bias
           //!-------------------------------------------------------
           if(ID > 0){
-              TwCbPbVis.zeroFlag = P_zero[ID];  TwCbPbVis.vi = v(ID);  TwCbPbVis.R_ = &Rot[ID];  TwCbPbVis.P_ = &TransConst[ID];
-              TwCbPbVis.S_j = &Twists[IDj];     TwCbPbVis.M_ = &MConst[ID];
+              TwCbPbVis.zeroFlag = P_zero[ID];  TwCbPbVis.vi = v(ID);  TwCbPbVis.S = &Screw_w[ID];  TwCbPbVis.R_ = &Rot[ID];
+              TwCbPbVis.P_ = &TransConst[ID];   TwCbPbVis.S_j = &Twists[IDj];     TwCbPbVis.M_ = &MConst[ID];
               TwCbPbVis.S_i = &Twists[ID];      TwCbPbVis.c_ = &Cbias[ID];  TwCbPbVis.p_ = &Pbias[ID];
               //!-------------------------------------------------------
               TwCbPbVis.D_q_Vj_ = &D_q_V[IDj];  TwCbPbVis.D_dq_Vj_ = &D_dq_V[IDj];  TwCbPbVis.D_q_V_ = &D_q_V[ID];
@@ -313,7 +320,7 @@ namespace geo {
               //!-------------------------------------------------------
               boost::apply_visitor( TwCbPbVis, *JointTypesIter );
             } else {
-              TCP_rootVis.vi = v(ID);  TCP_rootVis.S_i = &Twists[ID];
+              TCP_rootVis.vi = v(ID);  TCP_rootVis.S = &Screw_w[ID];  TCP_rootVis.S_i = &Twists[ID];
               TCP_rootVis.p_ = &Pbias[ID];  TCP_rootVis.M_ = &MConst[ID];  TCP_rootVis.D_dq_p_ = &D_dq_p[ID];
               //!-------------------------------------------------------
               boost::apply_visitor( TCP_rootVis, *JointTypesIter );
@@ -344,7 +351,7 @@ namespace geo {
           if (nS) {
               InertialVis.indexVec = &indexVec[ID];
               InertialVis.u = &u[ID];   InertialVis.iD = &invD[ID];   InertialVis.tau = tau(ID);
-              InertialVis.U_ = &U[ID];  InertialVis.c_ = &Cbias[ID];
+              InertialVis.S = &Screw_w[ID];  InertialVis.U_ = &U[ID];  InertialVis.c_ = &Cbias[ID];
               InertialVis.P_A_ = &P_A[ID];  InertialVis.M_A_ = &M_A[ID];
               InertialVis.P_a_ = &P_a[ID];  InertialVis.M_a_ = &M_a[ID];
               InertialVis.P_ = &TransConst[ID];  InertialVis.R_ = &Rot[ID];  InertialVis.P_z = P_zero[ID];
@@ -362,8 +369,8 @@ namespace geo {
               //!-------------------------------------------------------
               boost::apply_visitor( InertialVis, *JointTypesIter );
             } else {
-              InerLeafVis.u = &u[ID];   InerLeafVis.iD = &invD[ID];   InerLeafVis.tau = tau(ID);
-              InerLeafVis.U_ = &U[ID];  InerLeafVis.c_ = &Cbias[ID];
+              InerLeafVis.u = &u[ID];   InerLeafVis.iD = &invD[ID];    InerLeafVis.tau = tau(ID);
+              InerLeafVis.S = &Screw_w[ID];  InerLeafVis.U_ = &U[ID];  InerLeafVis.c_ = &Cbias[ID];
               InerLeafVis.P_A_ = &P_A[ID];  InerLeafVis.M_A_ = &M_A[ID];
               InerLeafVis.P_a_ = &P_a[ID];  InerLeafVis.M_a_ = &M_a[ID];
               InerLeafVis.P_ = &TransConst[ID];  InerLeafVis.R_ = &Rot[ID];  InerLeafVis.P_z = P_zero[ID];

@@ -15,19 +15,20 @@ namespace geo{
 
   //! Forward Kinematics Visitor
   //!------------------------------------------------------------------------------!//
-  template<typename ScalarType, typename Matrix3Type>
+  template<typename ScalarType, typename Vector3Type, typename Matrix3Type>
   class D_FwdKin_visitor : public boost::static_visitor<int> {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    D_FwdKin_visitor( ) : R(nullptr) {}
+    D_FwdKin_visitor( ) : R(nullptr), S(nullptr) {}
 
     ScalarType qi;
+    Vector3Type* S;
     Matrix3Type* R;
 
     template<typename Derived>
     int operator()(D_CRTPInterface<Derived> & BaseType) const {
-      BaseType.D_FwdKin(qi, (*R).derived());
+      BaseType.D_FwdKin(qi, (*S).derived(), (*R).derived());
       return 0;
     }
 
@@ -36,21 +37,21 @@ namespace geo{
 
   //! Visitor for Twist and bias elements at root
   //!------------------------------------------------------------------------------!//
-  template<typename ScalarType, typename Vector6Type, typename Matrix6Type, typename D_Vector6Type>
+  template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type, typename D_Vector6Type>
   class D_TCP_root_visitor : public boost::static_visitor<int> {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    D_TCP_root_visitor( ) : S_i(nullptr), p_(nullptr), M_(nullptr), D_dq_p_(nullptr) {}
+    D_TCP_root_visitor( ) : S(nullptr), S_i(nullptr), p_(nullptr), M_(nullptr), D_dq_p_(nullptr) {}
 
     //! Members
-    ScalarType vi;  Vector6Type* S_i;  Vector6Type* p_;  Matrix6Type* M_;  D_Vector6Type* D_dq_p_;
+    ScalarType vi;  Vector3Type* S;  Vector6Type* S_i;  Vector6Type* p_;  Matrix6Type* M_;  D_Vector6Type* D_dq_p_;
 
     //! Method -> member function
     template<typename Derived>
     int operator()(D_CRTPInterface<Derived> & BaseType) const {
-      BaseType.D_TCP_root(vi, (*S_i).derived(), (*p_).derived(), (*M_).derived(), (*D_dq_p_).derived());
+      BaseType.D_TCP_root(vi, (*S).derived(), (*S_i).derived(), (*p_).derived(), (*M_).derived(), (*D_dq_p_).derived());
       return 0;
     }
 
@@ -66,13 +67,13 @@ namespace geo{
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    D_TwCbPb_visitor( ) : R_(nullptr), P_(nullptr), S_j(nullptr), M_(nullptr), S_i(nullptr), c_(nullptr), p_(nullptr),
+    D_TwCbPb_visitor( ) : S(nullptr), R_(nullptr), P_(nullptr), S_j(nullptr), M_(nullptr), S_i(nullptr), c_(nullptr), p_(nullptr),
       D_q_V_(nullptr), D_dq_V_(nullptr), D_q_Vj_(nullptr), D_dq_Vj_(nullptr), D_q_c_(nullptr), D_dq_c_(nullptr),
       D_q_p_(nullptr), D_dq_p_(nullptr){}
 
     //! Members
     bool zeroFlag;
-    ScalarType vi;    Matrix3Type* R_;   Vector3Type* P_;  Vector6Type* S_j;
+    ScalarType vi;    Matrix3Type* R_;   Vector3Type* P_;  Vector3Type* S;  Vector6Type* S_j;
     Matrix6Type* M_;  Vector6Type* S_i;  Vector6Type* c_;  Vector6Type* p_;
     //!-------------------------------------------------------
     D_Vector6Type* D_q_V_;    D_Vector6Type* D_dq_V_;  D_Vector6Type* D_q_Vj_;  D_Vector6Type* D_q_p_;
@@ -81,7 +82,7 @@ namespace geo{
     //! Method -> member function
     template<typename Derived>
     int operator()(D_CRTPInterface<Derived> & BaseType) const {
-      BaseType.D_TwCbPb(zeroFlag, vi, (*R_).derived(),  (*P_).derived(), (*S_j).derived(), (*M_).derived(), (*S_i).derived(),
+      BaseType.D_TwCbPb(zeroFlag, vi, (*S).derived(), (*R_).derived(),  (*P_).derived(), (*S_j).derived(), (*M_).derived(), (*S_i).derived(),
                         (*c_).derived(), (*p_).derived(), (*D_q_V_).derived(), (*D_dq_V_).derived(), (*D_q_Vj_).derived(),
                         (*D_dq_Vj_).derived(), (*D_q_c_).derived(), (*D_dq_c_).derived(), (*D_q_p_).derived(), (*D_dq_p_).derived());
       return 0;
@@ -99,13 +100,13 @@ namespace geo{
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    D_InertiaLeaf_visitor( ) : u(nullptr), iD(nullptr), U_(nullptr), c_(nullptr), P_a_(nullptr), M_a_(nullptr),
+    D_InertiaLeaf_visitor( ) : u(nullptr), iD(nullptr), S(nullptr), U_(nullptr), c_(nullptr), P_a_(nullptr), M_a_(nullptr),
       P_A_(nullptr), M_A_(nullptr), P_(nullptr), R_(nullptr), P_Aj_(nullptr), M_Aj_(nullptr), D_M_Aj_(nullptr),
       D_q_u_(nullptr), D_dq_u_(nullptr), D_q_p_(nullptr), D_dq_p_(nullptr), D_q_Pa_(nullptr), D_dq_Pa_(nullptr),
       D_q_PA_(nullptr), D_dq_PA_(nullptr), D_q_PAj_(nullptr), D_dq_PAj_(nullptr), D_q_c_(nullptr), D_dq_c_(nullptr) {}
 
     //! Members
-    ScalarType* u;  ScalarType* iD;  ScalarType tau;  Vector6Type* U_;  Vector6Type* c_;
+    ScalarType* u;  ScalarType* iD;  ScalarType tau;  Vector3Type* S;  Vector6Type* U_;  Vector6Type* c_;
     Vector6Type* P_a_;  Matrix6Type* M_a_;  Vector6Type* P_A_;  Matrix6Type* M_A_;
     bool P_z;  Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* P_Aj_;  Matrix6Type* M_Aj_;
     //!-------------------------------------------------------
@@ -117,7 +118,7 @@ namespace geo{
     template<typename Derived>
     int operator()(D_CRTPInterface<Derived> & BaseType) const {
       ScalarType & u_ = (*u);  ScalarType & iD_ = (*iD);
-      BaseType.D_InertiaLeaf(u_, iD_, tau, (*U_).derived(), (*c_).derived(), (*P_a_).derived(), (*M_a_).derived(),
+      BaseType.D_InertiaLeaf(u_, iD_, tau, (*S).derived(), (*U_).derived(), (*c_).derived(), (*P_a_).derived(), (*M_a_).derived(),
                              (*P_A_).derived(), (*M_A_).derived(), P_z, (*P_).derived(), (*R_).derived(), (*P_Aj_).derived(),
                              (*M_Aj_).derived(), (*D_M_Aj_).derived(), (*D_q_u_).derived(), (*D_dq_u_).derived(),
                              (*D_q_p_).derived(), (*D_dq_p_).derived(), (*D_q_Pa_).derived(), (*D_dq_Pa_).derived(),
@@ -138,13 +139,13 @@ namespace geo{
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    D_Inertial_visitor( ) : u(nullptr), iD(nullptr), U_(nullptr), c_(nullptr), P_a_(nullptr), M_a_(nullptr),
+    D_Inertial_visitor( ) : u(nullptr), iD(nullptr), S(nullptr), U_(nullptr), c_(nullptr), P_a_(nullptr), M_a_(nullptr),
       P_A_(nullptr), M_A_(nullptr), P_(nullptr), R_(nullptr), P_Aj_(nullptr), M_Aj_(nullptr), D_U_h_(nullptr),
       D_U_v_(nullptr), D_invD_(nullptr), D_M_A_(nullptr), D_M_Aj_(nullptr){}
 
     //! Members
     Vector6iType* indexVec;  bool rootFlag;
-    ScalarType* u;  ScalarType* iD;  ScalarType tau;  Vector6Type* U_;  Vector6Type* c_;
+    ScalarType* u;  ScalarType* iD;  ScalarType tau;  Vector3Type* S;  Vector6Type* U_;  Vector6Type* c_;
     Vector6Type* P_a_;  Matrix6Type* M_a_;  Vector6Type* P_A_;  Matrix6Type* M_A_;
     bool P_z;  Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* P_Aj_;  Matrix6Type* M_Aj_;
     //!-------------------------------------------------------
@@ -160,12 +161,12 @@ namespace geo{
     template<typename Derived>
     int operator()(D_CRTPInterface<Derived> & BaseType) const {
       ScalarType & u_ = (*u);  ScalarType & iD_ = (*iD);
-      BaseType.D_Inertial(rootFlag, (*indexVec).derived(), u_, iD_, tau, (*U_).derived(), (*c_).derived(), (*P_a_).derived(), (*M_a_).derived(),
-                          (*P_A_).derived(), (*M_A_).derived(), P_z, (*P_).derived(), (*R_).derived(),
+      BaseType.D_Inertial(rootFlag, (*indexVec).derived(), u_, iD_, tau, (*S).derived(), (*U_).derived(), (*c_).derived(), (*P_a_).derived(),
+                          (*M_a_).derived(), (*P_A_).derived(), (*M_A_).derived(), P_z, (*P_).derived(), (*R_).derived(),
                           (*P_Aj_).derived(), (*M_Aj_).derived(), (*D_U_h_).derived(), (*D_U_v_).derived(),
                           (*D_invD_).derived(), (*D_M_A_).derived(), (*D_M_Aj_).derived(), (*D_q_u_).derived(), (*D_dq_u_).derived(),
-                          (*D_q_Pa_).derived(), (*D_dq_Pa_).derived(), (*D_q_PA_).derived(), (*D_dq_PA_).derived(), (*D_q_PAj_).derived(), (*D_dq_PAj_).derived(),
-                          (*D_q_c_).derived(), (*D_dq_c_).derived());
+                          (*D_q_Pa_).derived(), (*D_dq_Pa_).derived(), (*D_q_PA_).derived(), (*D_dq_PA_).derived(), (*D_q_PAj_).derived(),
+                          (*D_dq_PAj_).derived(), (*D_q_c_).derived(), (*D_dq_c_).derived());
       return 0;
     }
 

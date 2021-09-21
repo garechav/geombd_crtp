@@ -22,16 +22,18 @@ namespace geo{
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! FK Forward Declaration.
-    template<typename ScalarType, typename Matrix3Type>
+    template<typename ScalarType, typename Vector3Type, typename Matrix3Type>
     inline static void
     runD_FK(const ScalarType & qi,
+            const Eigen::MatrixBase<Vector3Type> & S,
             typename Eigen::MatrixBase<Matrix3Type> & R);
 
 
     //! TwCbPb at Root Forward Declaration.
-    template<typename ScalarType, typename Vector6Type, typename Matrix6Type, typename D_Vector6Type>
+    template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type, typename D_Vector6Type>
     inline static void
     runD_TCP_root(const ScalarType & vi,
+                  const Eigen::MatrixBase<Vector3Type> & S,
                   Eigen::MatrixBase<Vector6Type> & S_i,
                   Eigen::MatrixBase<Vector6Type> & p_,
                   const Eigen::MatrixBase<Matrix6Type> & M_,
@@ -44,6 +46,7 @@ namespace geo{
     inline static void
     runD_TwCbPb(bool zeroFlag,
                 const ScalarType & vi,
+                const Eigen::MatrixBase<Vector3Type> & S,
                 const Eigen::MatrixBase<Matrix3Type> & R_,
                 const Eigen::MatrixBase<Vector3Type> & P_,
                 const Eigen::MatrixBase<Vector6Type> & S_l,
@@ -68,6 +71,7 @@ namespace geo{
     runD_InertiaLeaf(ScalarType & u,
                      ScalarType & iD,
                      const ScalarType tau,
+                     const Eigen::MatrixBase<Vector3Type> & S,
                      Eigen::MatrixBase<Vector6Type> & U_,
                      Eigen::MatrixBase<Vector6Type> & c_,
                      Eigen::MatrixBase<Vector6Type> & P_a_,
@@ -103,6 +107,7 @@ namespace geo{
                   ScalarType & u,
                   ScalarType & iD,
                   const ScalarType tau,
+                  const Eigen::MatrixBase<Vector3Type> & S,
                   Eigen::MatrixBase<Vector6Type> & U_,
                   Eigen::MatrixBase<Vector6Type> & c_,
                   Eigen::MatrixBase<Vector6Type> & P_a_,
@@ -195,9 +200,10 @@ namespace geo{
   //! Forward Kinematics Declaration
   //! EIGEN_ASM_COMMENT("MyBegin");
   //!------------------------------------------------------------------------------!//
-  template<typename ScalarType, typename Matrix3Type>
+  template<typename ScalarType, typename Vector3Type, typename Matrix3Type>
   inline void
   D_JointTypeRz::runD_FK(const ScalarType & qi,
+                         const Eigen::MatrixBase<Vector3Type> & S,
                          typename Eigen::MatrixBase<Matrix3Type> & R) {
     static ScalarType sqi, cqi;
     SINCOS<ScalarType>(qi, &sqi, &cqi);
@@ -208,9 +214,10 @@ namespace geo{
 
 
   //! TwCbPb at Root Declaration.
-  template<typename ScalarType, typename Vector6Type, typename Matrix6Type, typename D_Vector6Type>
+  template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type, typename D_Vector6Type>
   inline void
   D_JointTypeRz::runD_TCP_root(const ScalarType & vi,
+                               const Eigen::MatrixBase<Vector3Type> & S,
                                Eigen::MatrixBase<Vector6Type> & S_i,
                                Eigen::MatrixBase<Vector6Type> & p_,
                                const Eigen::MatrixBase<Matrix6Type> & M_,
@@ -261,6 +268,7 @@ namespace geo{
   inline void
   D_JointTypeRz::runD_TwCbPb(bool zeroFlag,
                              const ScalarType & vi,
+                             const Eigen::MatrixBase<Vector3Type> & S,
                              const Eigen::MatrixBase<Matrix3Type> & R_,
                              const Eigen::MatrixBase<Vector3Type> & P_,
                              const Eigen::MatrixBase<Vector6Type> & S_l,
@@ -410,6 +418,7 @@ namespace geo{
   D_JointTypeRz::runD_InertiaLeaf(ScalarType & u,
                                   ScalarType & iD,
                                   const ScalarType tau,
+                                  const Eigen::MatrixBase<Vector3Type> & S,
                                   Eigen::MatrixBase<Vector6Type> & U_,
                                   Eigen::MatrixBase<Vector6Type> & c_,
                                   Eigen::MatrixBase<Vector6Type> & P_a_,
@@ -533,6 +542,7 @@ namespace geo{
                                ScalarType & u,
                                ScalarType & iD,
                                const ScalarType tau,
+                               const Eigen::MatrixBase<Vector3Type> & S,
                                Eigen::MatrixBase<Vector6Type> & U_,
                                Eigen::MatrixBase<Vector6Type> & c_,
                                Eigen::MatrixBase<Vector6Type> & P_a_,
