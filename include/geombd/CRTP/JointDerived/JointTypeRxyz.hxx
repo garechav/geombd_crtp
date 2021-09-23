@@ -1,3 +1,14 @@
+/**
+ *    \file include/geombd/CRTP/JointDerived/JointTypeRxyz.hxx
+ *    \author Alvaro Paz, Gustavo Arechavaleta
+ *    \version 1.0
+ *    \date 2021
+ *
+ *    Derived class for Rxyz joint type
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
+ */
+
 #ifndef GEOMBD_JOINT_TYPE_REVOLUTE_XYZ_HXX
 #define GEOMBD_JOINT_TYPE_REVOLUTE_XYZ_HXX
 
@@ -338,22 +349,20 @@ namespace geoCRTP{
                              Eigen::MatrixBase<Matrix6Type> & M_A_r) {
 
     //! Ad*M*Ad
+    Matrix6Type Mtmp;
+
     typedef const Eigen::Block<Matrix6Type,3,3> constBlock3;
     typedef Eigen::Block<Matrix6Type,3,3> Block3;
 
-    typename Matrix6Type::PlainObject & M_a_ = const_cast<Matrix6Type &>(M_a_r.derived());
-    constBlock3 & Ai = M_a_.template block<3,3>(0,0);
-    constBlock3 & Bi = M_a_.template block<3,3>(0,3);
-    constBlock3 & Di = M_a_.template block<3,3>(3,3);
-
-//    typename GEOMBD_EIGEN_PLAIN_TYPE(Matrix6Type) Mtmp;
-    typename Matrix6Type::PlainObject Mtmp;
+    typename Matrix6Type::PlainObject & M_a_r_ = const_cast<Matrix6Type &>(M_a_r.derived());
+    constBlock3 & Ai = M_a_r_.template block<3,3>(0,0);
+    constBlock3 & Bi = M_a_r_.template block<3,3>(0,3);
+    constBlock3 & Di = M_a_r_.template block<3,3>(3,3);
 
     Block3 Ao = Mtmp.template block<3,3>(0,0);
     Block3 Bo = Mtmp.template block<3,3>(0,3);
     Block3 Co = Mtmp.template block<3,3>(3,0);
     Block3 Do = Mtmp.template block<3,3>(3,3);
-
 
     Do.noalias() = R_*Ai; // tmp variable
     Ao.noalias() = Do*R_.transpose();
@@ -363,7 +372,6 @@ namespace geoCRTP{
 
     Bo.noalias() = R_*Bi; // tmp variable
     Co.noalias() = Bo*R_.transpose();
-
 
     Bo = Co;
     if(P_z){

@@ -1,3 +1,14 @@
+/**
+ *    \file include/geombd/io/parser.hpp
+ *    \author Keny Ordaz
+ *    \version 1.0
+ *    \date 2021
+ *
+ *    Class to parse a multibody system from URDF
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
+ */
+
 #ifndef HEADER_IO_PARSER_HPP
 #define HEADER_IO_PARSER_HPP
 #include <iostream>

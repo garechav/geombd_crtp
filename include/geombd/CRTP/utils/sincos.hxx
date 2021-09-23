@@ -1,3 +1,14 @@
+/**
+ *    \file include/geombd/CRTP/utils/sincos.hxx
+ *    \author Alvaro Paz, Gustavo Arechavaleta
+ *    \version 1.0
+ *    \date 2021
+ *
+ *    Class to implement template-based sin cos functions
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
+ */
+
 #ifndef GEOMBD_SINCOS_HXX
 #define GEOMBD_SINCOS_HXX
 

@@ -1,12 +1,13 @@
 /**
- *    \file examples/example_CRTP_05.cc
+ *    \file examples/example_FwdDyn_plus_Diff.cpp
  *    \author Alvaro Paz, Gustavo Arechavaleta
  *    \version 1.0
- *    \date 2020
+ *    \date 2021
  *
- *    Example to test the ENHANCED ABA Differentiation wrt state
+ *    Example to test the ABA and its ENHANCED Differentiation wrt state
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
  */
-
 
 //#define EIGEN_RUNTIME_NO_MALLOC
 
@@ -22,9 +23,9 @@
 #include "geombd/io/parser.hpp"
 
 
-#define __FU_PATH_PREFIX__ "../data/TROmodels/"
+#define __FU_PATH_PREFIX__ "../../geombd_crtp/data/TROmodels/"
 //std::string urdf_dir = __FU_PATH_PREFIX__ "lwr.urdf"; //7
-std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_XYZ_python.urdf"; //24
+std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_python.urdf"; //24
 //std::string urdf_dir = __FU_PATH_PREFIX__ "HRP2.urdf"; //28
 //std::string urdf_dir = __FU_PATH_PREFIX__ "atlas.urdf"; //30
 
@@ -100,18 +101,11 @@ int main(){
   //!------------------------------------------------------------------------------!//
   //!------------------------Forward Dynamics Comparison---------------------------!//
   //!------------------------------------------------------------------------------!//
-
   auto ddq_fd = robotDyn->ddq;
   auto ddq_dfd = robotDDyn->ddq;
   auto ddq_subs = ddq_fd - ddq_dfd;
   std::cout<<"ddq error = "<<ddq_subs.eval().cwiseAbs().sum()<<std::endl;
 
-//  for (int ID = 0; ID < n; ID++) {
-//      //!------------------------------------------------------------------------------!//
-//      auto V_fd = robotDyn->Twists[ID];  auto V_dfd = robotDDyn->Twists[ID];  auto V_subs = V_fd - V_dfd;
-//      std::cout<<ID<<" V error = "<<V_subs.eval().cwiseAbs().sum()<<std::endl;
-//      //!------------------------------------------------------------------------------!//
-//    }
 
   //!------------------------------------------------------------------------------!//
   //!--------------Numeric verification through finite differences-----------------!//

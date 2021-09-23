@@ -1,3 +1,14 @@
+/**
+ *    \file include/geombd/CRTP/DJointBase.hxx
+ *    \author Alvaro Paz, Gustavo Arechavaleta
+ *    \version 1.0
+ *    \date 2021
+ *
+ *    Class to implement the CRTP base (interface)
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
+ */
+
 #ifdef EIGEN_VECTORIZE
 
 #endif
@@ -165,6 +176,7 @@ namespace geo {
     D_AccelRoot(ScalarType u,
                 ScalarType iD,
                 ScalarType* ddq,
+                const Eigen::MatrixBase<Vector3Type> & S,
                 const Eigen::MatrixBase<Vector3Type> & P_r,
                 const Eigen::MatrixBase<Matrix3Type> & R_r,
                 const Eigen::MatrixBase<Vector6Type> & U_r,
@@ -176,7 +188,7 @@ namespace geo {
                 Eigen::MatrixBase<D_Vector6Type> & D_q_A_,
                 Eigen::MatrixBase<D_Vector6Type> & D_dq_A_,
                 Eigen::MatrixBase<MatrixXType> & D_ddq_) {
-      static_cast<Derived*>(this)->runD_AccelRoot(u, iD, ddq, P_r, R_r, U_r, Acc_i_r, D_U_h_, D_invD_,
+      static_cast<Derived*>(this)->runD_AccelRoot(u, iD, ddq, S, P_r, R_r, U_r, Acc_i_r, D_U_h_, D_invD_,
                                                   D_q_u_, D_dq_u_, D_q_A_, D_dq_A_, D_ddq_);
     }
 
@@ -190,6 +202,7 @@ namespace geo {
             ScalarType u,
             ScalarType iD,
             ScalarType* ddq,
+            const Eigen::MatrixBase<Vector3Type> & S,
             const Eigen::MatrixBase<Vector3Type> & P_,
             const Eigen::MatrixBase<Matrix3Type> & R_,
             const Eigen::MatrixBase<Vector6Type> & c_,
@@ -211,7 +224,7 @@ namespace geo {
             Eigen::MatrixBase<D_Vector6Type> & D_dq_A_,
             Eigen::MatrixBase<D_Vector6Type> & D_q_Aj_,
             Eigen::MatrixBase<D_Vector6Type> & D_dq_Aj_) {
-      static_cast<Derived*>(this)->runD_Accel(ID, zeroFlag, u, iD, ddq, P_, R_, c_, U_, A_, Aj_, isLeaf, Pre_, Suc_, PreSuc_, D_U_h_, D_invD_,
+      static_cast<Derived*>(this)->runD_Accel(ID, zeroFlag, u, iD, ddq, S, P_, R_, c_, U_, A_, Aj_, isLeaf, Pre_, Suc_, PreSuc_, D_U_h_, D_invD_,
                                               D_ddq_, D_q_u_, D_dq_u_, D_q_c_, D_dq_c_, D_q_A_, D_dq_A_, D_q_Aj_, D_dq_Aj_);
     }
 

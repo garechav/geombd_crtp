@@ -1,3 +1,14 @@
+/**
+ *    \file include/geombd/CRTP/JointDerived/JointTypeRx.hxx
+ *    \author Alvaro Paz, Gustavo Arechavaleta
+ *    \version 1.0
+ *    \date 2021
+ *
+ *    Derived class for Rx joint type
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
+ */
+
 #ifndef GEOMBD_JOINT_TYPE_REVOLUTE_X_HXX
 #define GEOMBD_JOINT_TYPE_REVOLUTE_X_HXX
 

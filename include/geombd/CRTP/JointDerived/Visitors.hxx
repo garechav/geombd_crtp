@@ -1,3 +1,14 @@
+/**
+ *    \file include/geombd/CRTP/JointDerived/Visitors.hxx
+ *    \author Alvaro Paz, Gustavo Arechavaleta
+ *    \version 1.0
+ *    \date 2021
+ *
+ *    Classes for visitors
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
+ */
+
 #ifndef GEOMBD_VISITORS_HXX
 #define GEOMBD_VISITORS_HXX
 

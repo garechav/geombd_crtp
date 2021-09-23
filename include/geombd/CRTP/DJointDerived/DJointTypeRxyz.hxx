@@ -1,3 +1,14 @@
+/**
+ *    \file include/geombd/CRTP/DJointDerived/DJointTypeRxyz.hxx
+ *    \author Alvaro Paz, Gustavo Arechavaleta
+ *    \version 1.0
+ *    \date 2021
+ *
+ *    Derived class for Rxyz joint type
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
+ */
+
 #ifndef GEOMBD_DIFFERENTIATION_JOINT_TYPE_REVOLUTE_XYZ_HXX
 #define GEOMBD_DIFFERENTIATION_JOINT_TYPE_REVOLUTE_XYZ_HXX
 
@@ -143,6 +154,7 @@ namespace geo{
     runD_AccelRoot(ScalarType u,
                    ScalarType iD,
                    ScalarType* ddq,
+                   const Eigen::MatrixBase<Vector3Type> & S,
                    const Eigen::MatrixBase<Vector3Type> & P_r,
                    const Eigen::MatrixBase<Matrix3Type> & R_r,
                    const Eigen::MatrixBase<Vector6Type> & U_r,
@@ -165,6 +177,7 @@ namespace geo{
                ScalarType u,
                ScalarType iD,
                ScalarType* ddq,
+               const Eigen::MatrixBase<Vector3Type> & S,
                const Eigen::MatrixBase<Vector3Type> & P_,
                const Eigen::MatrixBase<Matrix3Type> & R_,
                const Eigen::MatrixBase<Vector6Type> & c_,
@@ -466,13 +479,16 @@ namespace geo{
                                     Eigen::MatrixBase<D_Vector6Type> & D_q_c_,
                                     Eigen::MatrixBase<D_Vector6Type> & D_dq_c_) {
     //! Solve U, inverse of D and u.
-    //!------------------------------------------------------------------------------!//
-    U_ = M_A_.template rightCols<1>();  iD = 1 / U_.coeff(5);  u = tau - P_A_.coeff(5);
+    //!------------------------------------------------------------------------------!//    
+    U_.noalias() = M_A_.template rightCols<3>()*S;
+    ScalarType D;  D = S.dot( U_.template segment<3>(3) );  iD = 1 / D;
+    u = tau - S.dot( P_A_.template segment<3>(3) );
 
 
     //! Solve partial derivative of u as D_q_u and D_dq_u.
     //!------------------------------------------------------------------------------!//
-    D_q_u_ = -D_q_PA_.template bottomRows<1>();  D_dq_u_ = -D_dq_PA_.template bottomRows<1>();
+    D_q_u_  = - S.transpose() * D_q_PA_.template bottomRows<3>();
+    D_dq_u_ = - S.transpose() * D_dq_PA_.template bottomRows<3>();
 
 
     //! Prepare inertial expressions.
@@ -490,7 +506,7 @@ namespace geo{
     //    typename GEOMBD_EIGEN_PLAIN_TYPE(Matrix6Type) Mtmp;
     Matrix6Type Mtmp, AdjointDual;
 
-    Mat6ProjRz(P_z, P_, R_, M_a_, Mtmp);
+    Mat6ProjRxyz(P_z, P_, R_, M_a_, Mtmp);
 
     M_Aj_ += Mtmp;
 
@@ -515,18 +531,18 @@ namespace geo{
 
     //! Inertial back-projection differentiation.
     //!------------------------------------------------------------------------------!//
-    //! M_a differentiation -> Single-motion-revolute screws enable skew-symmetric properties.
+    //! M_a differentiation -> Screws due to pure-revolute-motions enable skew-symmetric properties.
     //!------------------------------------------------------------------------------!//
     Matrix6Type M_a_S = Matrix6Type::Zero();  Matrix6Type M_a_S_;
-    M_a_S.template row(0) = -M_a_.template row(1);  // mimicking effect ad_dual(-Sz)*Ma
-    M_a_S.template row(1) =  M_a_.template row(0);
-    M_a_S.template row(3) = -M_a_.template row(4);
-    M_a_S.template row(4) =  M_a_.template row(3);
+    typename Matrix3Type::PlainObject skew_S = Skew(S);
 
-    M_a_S_.noalias() = M_a_S + M_a_S.transpose();   // mimicking effect ad_dual(-Sz)*Ma - Ma*ad(Sz)
+    M_a_S.template topRows<3>()    = skew_S * M_a_.template topRows<3>();  // mimicking ad_dual(-Sxyz)*Ma effect
+    M_a_S.template bottomRows<3>() = skew_S * M_a_.template bottomRows<3>();
+
+    M_a_S_.noalias() = M_a_S + M_a_S.transpose();   // mimicking ad_dual(-Sxyz)*Ma - Ma*ad(Sxyz) effect
 
     //! Transform M_a_S_ since it is now symmetric.
-    Mat6ProjRz(P_z, P_, R_, M_a_S_, Mtmp);
+    Mat6ProjRxyz(P_z, P_, R_, M_a_S_, Mtmp);
 
     D_M_Aj_ = Mtmp;
 
@@ -543,7 +559,10 @@ namespace geo{
 
     //! D_q_Pa back projection.
     //!------------------------------------------------------------------------------!//
-    P_A_i << -P_a_.coeff(1), P_a_.coeff(0), 0, -P_a_.coeff(4), P_a_.coeff(3), 0;
+    P_A_i.template segment<3>(0) = S.cross(P_a_.template segment<3>(0));  // mimicking ad_dual(-Sxyz)*Pa effect
+    P_A_i.template segment<3>(3) = S.cross(P_a_.template segment<3>(3));
+
+
     AdDual(P_, R_, AdjointDual);
     D_q_PAj_.template rightCols<1>() = AdjointDual*P_A_i;
     D_q_PAj_.noalias() += AdjointDual*D_q_Pa_;
@@ -593,25 +612,28 @@ namespace geo{
                                  Eigen::MatrixBase<D_Vector6Type> & D_dq_c_) {
     //! Solve U and its partial derivative.
     //!------------------------------------------------------------------------------!
-    U_ = M_A_.template rightCols<1>();
+    U_.noalias() = M_A_.template rightCols<3>()*S;
     //!-------------------------------------------------------
-    D_U_v_ = D_M_A_.template rightCols<1>();
+    D_U_v_ = D_M_A_.template rightCols<3>()*S;
     short int nS = iVec.coeffRef(3) - 1;
     D_U_h_ = Eigen::Map<D_Vector6Type>(D_U_v_.derived().data(), 6, nS);
 
 
     //! Solve the inverse of D and its partial derivative.
     //!------------------------------------------------------------------------------!//
-    iD = 1 / U_.coeffRef(5);
+    ScalarType D;
+    D = S.dot( U_.template segment<3>(3) );
+    iD = 1 / D;
     //!-------------------------------------------------------
-    D_invD_.noalias() = -pow(iD,2)*D_U_h_.template bottomRows<1>();
+    D_invD_.noalias() = -pow(iD,2)*S.transpose()*D_U_h_.template bottomRows<3>();
 
 
     //! Solve u and its partial derivative.
     //!------------------------------------------------------------------------------!//
-    u = tau - P_A_.coeffRef(5);
+    u = tau - S.dot( P_A_.template segment<3>(3) );
     //!-------------------------------------------------------
-    D_q_u_ = -D_q_PA_.template bottomRows<1>();  D_dq_u_ = -D_dq_PA_.template bottomRows<1>();
+    D_q_u_ = -S.transpose()*D_q_PA_.template bottomRows<3>();
+    D_dq_u_ = -S.transpose()*D_dq_PA_.template bottomRows<3>();
 
 
     //! Differentiating inertial back-projection to parent. Only if parent is not the root.
@@ -650,7 +672,7 @@ namespace geo{
           }
 
         //! then D_MtmpII = D_M_a and D_MtmpI is AdjointDual*D_M_a*Adjoint
-        D_Mat6ProjRz(P_z, nS, P_, R_, D_MtmpII, D_MtmpI);
+        D_Mat6ProjRxyz(P_z, nS, P_, R_, D_MtmpII, D_MtmpI);
 
         //! Prepare inertial expression differentiation D_q_Pa.
         //!------------------------------------------------------------------------------!//
@@ -675,7 +697,7 @@ namespace geo{
         //!------------------------------------------------------------------------------!//
         //! Back projection of M_a.
         //!------------------------------------------------------------------------------!//
-        Mat6ProjRz(P_z, P_, R_, M_a_, Mtmp);
+        Mat6ProjRxyz(P_z, P_, R_, M_a_, Mtmp);
         M_Aj_.noalias() += Mtmp;
 
 
@@ -703,21 +725,22 @@ namespace geo{
         //! M_a differentiation -> Single-motion-revolute screws enable skew-symmetric properties.
         //!------------------------------------------------------------------------------!//
         Matrix6Type M_a_S;  Matrix6Type M_a_S_;
-        M_a_S.setZero();
-        M_a_S.template row(0) = -M_a_.template row(1);  // mimicking effect ad_dual(-Sz)*Ma
-        M_a_S.template row(1) =  M_a_.template row(0);
-        M_a_S.template row(3) = -M_a_.template row(4);
-        M_a_S.template row(4) =  M_a_.template row(3);
+        typename Matrix3Type::PlainObject skew_S = Skew(S);
 
-        M_a_S_.noalias() = M_a_S + M_a_S.transpose();   // mimicking effect ad_dual(-Sz)*Ma - Ma*ad(Sz)
+        M_a_S.template topRows<3>()    = skew_S * M_a_.template topRows<3>();  // mimicking ad_dual(-Sxyz)*Ma effect
+        M_a_S.template bottomRows<3>() = skew_S * M_a_.template bottomRows<3>();
+
+        M_a_S_.noalias() = M_a_S + M_a_S.transpose();   // mimicking ad_dual(-Sxyz)*Ma - Ma*ad(Sxyz) effect
 
         //! Transform M_a_S_ since it is now symmetric.
-        Mat6ProjRz(P_z, P_, R_, M_a_S_, Mtmp);
+        Mat6ProjRxyz(P_z, P_, R_, M_a_S_, Mtmp);
 
         //!------------------------------------------------------------------------------!//
         //!                                  BRANCHING                                   !//
         //!------------------------------------------------------------------------------!//
-        P_A_i << -P_a_.coeff(1), P_a_.coeff(0), 0, -P_a_.coeff(4), P_a_.coeff(3), 0;
+        P_A_i.template segment<3>(0) = S.cross(P_a_.template segment<3>(0));  // mimicking ad_dual(-Sxyz)*Pa effect
+        P_A_i.template segment<3>(3) = S.cross(P_a_.template segment<3>(3));
+
         if (nChild == 1) {  //! Serial Body
             //!-------------------------------------------------------------------------  D_MA
             D_M_Aj_.template topRows<6>() = Mtmp;
@@ -762,19 +785,20 @@ namespace geo{
            typename D_Vector6Type, typename RowVectorXType, typename MatrixXType>
   inline void
   D_JointTypeRxyz::runD_AccelRoot(ScalarType u,
-                                ScalarType iD,
-                                ScalarType* ddq,
-                                const Eigen::MatrixBase<Vector3Type> & P_r,
-                                const Eigen::MatrixBase<Matrix3Type> & R_r,
-                                const Eigen::MatrixBase<Vector6Type> & U_r,
-                                Eigen::MatrixBase<Vector6Type> & Acc_i_r,
-                                Eigen::MatrixBase<D_Vector6Type> & D_U_h_,
-                                Eigen::MatrixBase<RowVectorXType> & D_invD_,
-                                Eigen::MatrixBase<RowVectorXType> & D_q_u_,
-                                Eigen::MatrixBase<RowVectorXType> & D_dq_u_,
-                                Eigen::MatrixBase<D_Vector6Type> & D_q_A_,
-                                Eigen::MatrixBase<D_Vector6Type> & D_dq_A_,
-                                Eigen::MatrixBase<MatrixXType> & D_ddq_) {
+                                  ScalarType iD,
+                                  ScalarType* ddq,
+                                  const Eigen::MatrixBase<Vector3Type> & S,
+                                  const Eigen::MatrixBase<Vector3Type> & P_r,
+                                  const Eigen::MatrixBase<Matrix3Type> & R_r,
+                                  const Eigen::MatrixBase<Vector6Type> & U_r,
+                                  Eigen::MatrixBase<Vector6Type> & Acc_i_r,
+                                  Eigen::MatrixBase<D_Vector6Type> & D_U_h_,
+                                  Eigen::MatrixBase<RowVectorXType> & D_invD_,
+                                  Eigen::MatrixBase<RowVectorXType> & D_q_u_,
+                                  Eigen::MatrixBase<RowVectorXType> & D_dq_u_,
+                                  Eigen::MatrixBase<D_Vector6Type> & D_q_A_,
+                                  Eigen::MatrixBase<D_Vector6Type> & D_dq_A_,
+                                  Eigen::MatrixBase<MatrixXType> & D_ddq_) {
 
     EIGEN_STATIC_ASSERT(Vector6Type::ColsAtCompileTime == 1,
                         YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX);
@@ -782,27 +806,37 @@ namespace geo{
     //! Acceleration bias and its derivative.
     //!------------------------------------------------------------------------------!//
     //! g = [ 0, 0, 9.81, 0, 0, 0 ]^T
-    //! Acc_a = Ad(G[Sz])*g = [ 0 0 9.81 0 0 0 ]^T
-    //! D_Acc_a = -ad(Sz)*Ad(G)*g = 0
+    //! Acc_a = Ad(G[Sxyz])*g = [ 9.81*R_r.row(2), 0, 0, 0 ]^T
+    //! D_Acc_a = -ad(Sz)*Ad(G[Sxyz])*g = 0
+
+    Eigen::Matrix<ScalarType, 1, 3> R_row;
+    R_row = 9.81*R_r.row(2);
+    Acc_i_r.setZero();  D_q_A_.setZero();
+    Acc_i_r.template segment<3>(0) = R_row.transpose();
+
+    D_q_A_.template block<3,1>(0,0) = -S.cross(R_row.transpose());
 
 
     //! Joint acceleration and its derivatives D_q_ddq and D_dq_ddq.
     //!------------------------------------------------------------------------------!//
     ScalarType ddq_;
-    ddq_ = u - 9.81*U_r.template segment<1>(2)(0);
-    (*ddq) = iD*ddq_;
+    ddq_ = u - U_r.transpose()*Acc_i_r;
+    (*ddq) = ddq_*iD;
+
+
     //!-------------------------------------------------------
-    typename RowVectorXType::PlainObject D_q_ddq, D_dq_ddq;
+    RowVectorXType D_q_ddq, D_dq_ddq;
     D_q_ddq.noalias() = iD*D_q_u_;  D_dq_ddq.noalias() = iD*D_dq_u_;
-    D_q_ddq.segment(1,D_U_h_.cols()) += ddq_*D_invD_ - (iD*9.81)*D_U_h_.row(2);
+    ScalarType U_D_A = U_r.transpose()*D_q_A_.template leftCols<1>();
+    D_q_ddq.coeffRef(0) -= iD*U_D_A;
+    D_q_ddq.segment(1,D_U_h_.cols()).noalias() += ddq_*D_invD_ - iD*R_row*D_U_h_.template topRows<3>();
 
 
     //! Update spatial acceleration and its derivative.
     //!------------------------------------------------------------------------------!//
-    Acc_i_r.coeffRef(2) = 9.81;
-    Acc_i_r.coeffRef(5) = iD*ddq_;
+    Acc_i_r.template segment<3>(3) = S*iD*ddq_;
     //!-------------------------------------------------------
-    D_q_A_.template bottomRows<1>() = D_q_ddq;  D_dq_A_.template bottomRows<1>() = D_dq_ddq;
+    D_q_A_.template bottomRows<3>() = S*D_q_ddq;  D_dq_A_.template bottomRows<3>() = S*D_dq_ddq;
 
 
     //! Fill up D_ddq.
@@ -816,31 +850,32 @@ namespace geo{
            typename Vector6Type, typename D_Vector6Type, typename RowVectorXType, typename MatrixXType>
   inline void
   D_JointTypeRxyz::runD_Accel(IndexType ID,
-                            bool zeroFlag,
-                            ScalarType u,
-                            ScalarType iD,
-                            ScalarType* ddq,
-                            const Eigen::MatrixBase<Vector3Type> & P_,
-                            const Eigen::MatrixBase<Matrix3Type> & R_,
-                            const Eigen::MatrixBase<Vector6Type> & c_,
-                            const Eigen::MatrixBase<Vector6Type> & U_,
-                            Eigen::MatrixBase<Vector6Type> & A_,
-                            const Eigen::MatrixBase<Vector6Type> & Aj_,
-                            bool isLeaf,
-                            std::vector< IndexType >* Pre_,
-                            std::vector< IndexType >* Suc_,
-                            std::vector< IndexType >* PreSuc_,
-                            Eigen::MatrixBase<D_Vector6Type> & D_U_h_,
-                            Eigen::MatrixBase<RowVectorXType> & D_invD_,
-                            Eigen::MatrixBase<MatrixXType> & D_ddq_,
-                            Eigen::MatrixBase<RowVectorXType> & D_q_u_,
-                            Eigen::MatrixBase<RowVectorXType> & D_dq_u_,
-                            Eigen::MatrixBase<D_Vector6Type> & D_q_c_,
-                            Eigen::MatrixBase<D_Vector6Type> & D_dq_c_,
-                            Eigen::MatrixBase<D_Vector6Type> & D_q_A_,
-                            Eigen::MatrixBase<D_Vector6Type> & D_dq_A_,
-                            Eigen::MatrixBase<D_Vector6Type> & D_q_Aj_,
-                            Eigen::MatrixBase<D_Vector6Type> & D_dq_Aj_) {
+                              bool zeroFlag,
+                              ScalarType u,
+                              ScalarType iD,
+                              ScalarType* ddq,
+                              const Eigen::MatrixBase<Vector3Type> & S,
+                              const Eigen::MatrixBase<Vector3Type> & P_,
+                              const Eigen::MatrixBase<Matrix3Type> & R_,
+                              const Eigen::MatrixBase<Vector6Type> & c_,
+                              const Eigen::MatrixBase<Vector6Type> & U_,
+                              Eigen::MatrixBase<Vector6Type> & A_,
+                              const Eigen::MatrixBase<Vector6Type> & Aj_,
+                              bool isLeaf,
+                              std::vector< IndexType >* Pre_,
+                              std::vector< IndexType >* Suc_,
+                              std::vector< IndexType >* PreSuc_,
+                              Eigen::MatrixBase<D_Vector6Type> & D_U_h_,
+                              Eigen::MatrixBase<RowVectorXType> & D_invD_,
+                              Eigen::MatrixBase<MatrixXType> & D_ddq_,
+                              Eigen::MatrixBase<RowVectorXType> & D_q_u_,
+                              Eigen::MatrixBase<RowVectorXType> & D_dq_u_,
+                              Eigen::MatrixBase<D_Vector6Type> & D_q_c_,
+                              Eigen::MatrixBase<D_Vector6Type> & D_dq_c_,
+                              Eigen::MatrixBase<D_Vector6Type> & D_q_A_,
+                              Eigen::MatrixBase<D_Vector6Type> & D_dq_A_,
+                              Eigen::MatrixBase<D_Vector6Type> & D_q_Aj_,
+                              Eigen::MatrixBase<D_Vector6Type> & D_dq_Aj_) {
 
     EIGEN_STATIC_ASSERT(Vector6Type::ColsAtCompileTime == 1,
                         YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX);
@@ -870,8 +905,10 @@ namespace geo{
     AaDown.noalias() = R_.transpose()*AjDown;
 
     //!-------------------------------------------------------
-    //! mimicking effect -ad(Sz)*Ad*Aj
-    AdAj << Aa_.coeff(1), -Aa_.coeff(0), 0, Aa_.coeff(4), -Aa_.coeff(3), 0;
+    //! mimicking effect -ad(Sxyz)*Ad*Aj
+    AdAj.template segment<3>(0) = - S.cross( Aa_.template segment<3>(0));
+    AdAj.template segment<3>(3) = - S.cross( Aa_.template segment<3>(3));
+
     //!-------------------------------------------------------
 
     Aa_.noalias() += c_;
@@ -906,7 +943,7 @@ namespace geo{
     //! Update spatial acceleration and its derivatives D_q_A and D_dq_A.
     //!------------------------------------------------------------------------------!//
     A_ = Aa_;
-    A_.coeffRef(5) += ddq_;
+    A_.template segment<3>(3) += S*ddq_;
 
 
     //! Special treatment when body is not a leaf.
@@ -915,10 +952,10 @@ namespace geo{
         D_q_ddq(Eigen::all, *Suc_) += ddq__*D_invD_ - iD*Aa_.transpose()*D_U_h_;
         //!------------------------------------------------------------------------------!//
         D_q_A_ = D_q_Aa_;
-        D_q_A_.template bottomRows<1>() += D_q_ddq;  //! TODO: D_q_A_ can be tmp used as D_q_Aa_; saving an assignation
+        D_q_A_.template bottomRows<3>() += S*D_q_ddq;  //! TODO: D_q_A_ can be tmp used as D_q_Aa_; saving an assignation
 
         D_dq_A_ = D_dq_Aa_;
-        D_dq_A_.template bottomRows<1>() += D_dq_ddq;
+        D_dq_A_.template bottomRows<3>() += S*D_dq_ddq;
       }
 
 

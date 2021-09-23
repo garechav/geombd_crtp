@@ -1,3 +1,14 @@
+/**
+ *    \file include/geombd/CRTP/DJointDerived/DVisitors.hxx
+ *    \author Alvaro Paz, Gustavo Arechavaleta
+ *    \version 1.0
+ *    \date 2021
+ *
+ *    Classes for visitors
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
+ */
+
 #ifndef GEOMBD_DIFFERENTIATION_VISITORS_HXX
 #define GEOMBD_DIFFERENTIATION_VISITORS_HXX
 
@@ -182,12 +193,12 @@ namespace geo{
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    D_Accel_root_visitor( ) : ddq(nullptr), P_(nullptr), R_(nullptr), U_(nullptr), Acc_i_(nullptr), D_U_h_(nullptr),
+    D_Accel_root_visitor( ) : ddq(nullptr), S(nullptr), P_(nullptr), R_(nullptr), U_(nullptr), Acc_i_(nullptr), D_U_h_(nullptr),
       D_invD_(nullptr), D_q_u_(nullptr), D_dq_u_(nullptr), D_q_A_(nullptr), D_dq_A_(nullptr), D_ddq_(nullptr){}
 
     //! Members
     ScalarType u, iD;  ScalarType* ddq;
-    Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* U_;  Vector6Type* Acc_i_;
+    Vector3Type* S;  Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* U_;  Vector6Type* Acc_i_;
     //!-------------------------------------------------------
     D_Vector6Type* D_U_h_;  RowVectorXType* D_invD_;  RowVectorXType* D_q_u_;  RowVectorXType* D_dq_u_;
     D_Vector6Type* D_q_A_;  D_Vector6Type* D_dq_A_;  MatrixXType* D_ddq_;
@@ -195,7 +206,7 @@ namespace geo{
     //! Method -> member function
     template<typename Derived>
     int operator()(D_CRTPInterface<Derived> & BaseType) const {
-      BaseType.D_AccelRoot(u, iD, ddq, (*P_).derived(), (*R_).derived(), (*U_).derived(), (*Acc_i_).derived(),
+      BaseType.D_AccelRoot(u, iD, ddq, (*S).derived(), (*P_).derived(), (*R_).derived(), (*U_).derived(), (*Acc_i_).derived(),
                            (*D_U_h_).derived(), (*D_invD_).derived(), (*D_q_u_).derived(), (*D_dq_u_).derived(),
                            (*D_q_A_).derived(), (*D_dq_A_).derived(), (*D_ddq_).derived());
       return 0;
@@ -213,13 +224,14 @@ namespace geo{
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    D_Accel_visitor( ) : ddq(nullptr), P_(nullptr), R_(nullptr), c_(nullptr), U_(nullptr), Acc_i_(nullptr), Acc_j_(nullptr),
+    D_Accel_visitor( ) : ddq(nullptr), S(nullptr), P_(nullptr), R_(nullptr), c_(nullptr), U_(nullptr), Acc_i_(nullptr), Acc_j_(nullptr),
       D_U_h_(nullptr), D_invD_(nullptr), D_ddq_(nullptr), D_q_u_(nullptr), D_dq_u_(nullptr), D_q_c_(nullptr), D_dq_c_(nullptr),
       D_q_A_(nullptr), D_dq_A_(nullptr), D_q_Aj_(nullptr), D_dq_Aj_(nullptr), Pre_(nullptr), Suc_(nullptr), PreSuc_(nullptr) {}
 
     //! Members
     bool zeroFlag;  ScalarType u, iD;  ScalarType* ddq;
-    Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* c_;  Vector6Type* U_;  Vector6Type* Acc_i_;  Vector6Type* Acc_j_;
+    Vector3Type* S;  Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* c_;
+    Vector6Type* U_;  Vector6Type* Acc_i_;  Vector6Type* Acc_j_;
     //!-------------------------------------------------------
     bool isLeaf;  IndexType ID;
     std::vector< IndexType >* Pre_;  std::vector< IndexType >* Suc_;  std::vector< IndexType >* PreSuc_;
@@ -230,7 +242,7 @@ namespace geo{
     //! Method -> member function
     template<typename Derived>
     int operator()(D_CRTPInterface<Derived> & BaseType) const {
-      BaseType.D_Accel(ID, zeroFlag, u, iD, ddq, (*P_).derived(), (*R_).derived(), (*c_).derived(), (*U_).derived(),
+      BaseType.D_Accel(ID, zeroFlag, u, iD, ddq, (*S).derived(), (*P_).derived(), (*R_).derived(), (*c_).derived(), (*U_).derived(),
                        (*Acc_i_).derived(), (*Acc_j_).derived(), isLeaf, Pre_, Suc_, PreSuc_, (*D_U_h_).derived(), (*D_invD_).derived(),
                        (*D_ddq_).derived(), (*D_q_u_).derived(), (*D_dq_u_).derived(), (*D_q_c_).derived(), (*D_dq_c_).derived(),
                        (*D_q_A_).derived(), (*D_dq_A_).derived(), (*D_q_Aj_).derived(), (*D_dq_Aj_).derived());

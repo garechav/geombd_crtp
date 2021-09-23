@@ -1,10 +1,12 @@
 /**
- *    \file examples/example_FwdDyn.cc
+ *    \file examples/example_FwdDyn.cpp
  *    \author Alvaro Paz, Gustavo Arechavaleta
  *    \version 1.0
- *    \date 2020
+ *    \date 2021
  *
  *    Example to test the ABA
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
  */
 
 //#define EIGEN_RUNTIME_NO_MALLOC
@@ -19,8 +21,11 @@
 
 #include "geombd/io/parser.hpp"
 
-#define __FU_PATH_PREFIX__ "../data/TROmodels/"
-std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_python.urdf";
+#define __FU_PATH_PREFIX__ "../../geombd_crtp/data/TROmodels/"
+//std::string urdf_dir = __FU_PATH_PREFIX__ "lwr.urdf"; //7
+std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_python.urdf"; //24
+//std::string urdf_dir = __FU_PATH_PREFIX__ "HRP2.urdf"; //28
+//std::string urdf_dir = __FU_PATH_PREFIX__ "atlas.urdf"; //30
 
 //! Set time variables
 const int M = 100000;    // sample size;
@@ -67,33 +72,7 @@ int main(){
 
   std::cout<<"Forward dynamics = "<<t_total/M<<std::endl;
 
-  std::cout<<"FD = "<<robotDynamics->ddq.transpose()<<std::endl;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//  Eigen::internal::set_is_malloc_allowed(false);
-//  Eigen::MatrixXd R1 = Eigen::MatrixXd::Random(23,23);
-//  Eigen::MatrixXd R2 = Eigen::MatrixXd::Random(23,23);
-//  R1 += R1*R2;
-//  Eigen::internal::set_is_malloc_allowed(true);
-
-//  Eigen::internal::set_is_malloc_allowed(true);
-
-//  std::cout<<"Forward dynamics = "<<t_total_00/M<<std::endl;
-
-
-
+//  std::cout<<"FD = "<< std::scientific << std::setprecision(20) <<robotDynamics->ddq.transpose()<<std::endl<<std::endl<<std::endl;
 
   return 0;
 }

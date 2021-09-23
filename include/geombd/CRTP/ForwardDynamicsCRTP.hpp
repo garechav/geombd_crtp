@@ -1,3 +1,14 @@
+/**
+ *    \file include/geombd/CRTP/ForwardDynamics.hpp
+ *    \author Alvaro Paz, Gustavo Arechavaleta
+ *    \version 1.0
+ *    \date 2021
+ *
+ *    Class to implement the Articulated-Body Algorithm
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
+ */
+
 #ifndef GEOMBD_FORWARD_DYNAMICS_CRTP_HPP
 #define GEOMBD_FORWARD_DYNAMICS_CRTP_HPP
 

@@ -1,3 +1,14 @@
+/**
+ *    \file include/geombd/CRTP/DForwardDynamicsCRTP.hpp
+ *    \author Alvaro Paz, Gustavo Arechavaleta
+ *    \version 1.0
+ *    \date 2021
+ *
+ *    Class to implement the Articulated-Body Algorithm derivative wrt state
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
+ */
+
 #ifndef GEOMBD_FORWARD_DYNAMICS_DIFFERENTIATION_CRTP_HPP
 #define GEOMBD_FORWARD_DYNAMICS_DIFFERENTIATION_CRTP_HPP
 
@@ -171,22 +182,22 @@ namespace geo {
             }
           if (joint->type == Joint::joint_type::revolute) {
               D_dq_V[i-1].template rightCols<1>().template segment<3>(3) = axis;
-              //!-------------------------------------------------------
-              if((real_t)axis(0) == 1) {
-                  JointTypesVec.push_back( D_JointTypeRx{} );
-                }
-              //!-------------------------------------------------------
-              if((real_t)axis(1) == 1) {
-                  JointTypesVec.push_back( D_JointTypeRy{} );
-                }
-              //!-------------------------------------------------------
-              if((real_t)axis(2) == 1) {
-                  JointTypesVec.push_back( D_JointTypeRz{} );
-                }
-              //!-------------------------------------------------------
-              if((real_t)axis(1) != 0 && (real_t)axis(2) != 0) {
+//              //!-------------------------------------------------------
+//              if((real_t)axis(0) == 1) {
+//                  JointTypesVec.push_back( D_JointTypeRx{} );
+//                }
+//              //!-------------------------------------------------------
+//              if((real_t)axis(1) == 1) {
+//                  JointTypesVec.push_back( D_JointTypeRy{} );
+//                }
+//              //!-------------------------------------------------------
+//              if((real_t)axis(2) == 1) {
+//                  JointTypesVec.push_back( D_JointTypeRz{} );
+//                }
+//              //!-------------------------------------------------------
+//              if((real_t)axis(1) != 0 && (real_t)axis(2) != 0) {
                   JointTypesVec.push_back( D_JointTypeRxyz{} );
-                }
+//                }
 
             }
 
@@ -398,8 +409,8 @@ namespace geo {
           IDj = parent[ID];
           if( ID ){
               AccelVis.zeroFlag = P_zero[ID];  AccelVis.u = u[ID];  AccelVis.iD = invD[ID];
-              AccelVis.ddq = &ddq[ID];  AccelVis.P_ = &TransConst[ID];  AccelVis.R_ = &Rot[ID];
-              AccelVis.c_ = &Cbias[ID];  AccelVis.U_ = &U[ID];
+              AccelVis.ddq = &ddq[ID];   AccelVis.S = &Screw_w[ID];  AccelVis.P_ = &TransConst[ID];
+              AccelVis.R_ = &Rot[ID];    AccelVis.c_ = &Cbias[ID];   AccelVis.U_ = &U[ID];
               AccelVis.Acc_i_ = &Accel[ID];  AccelVis.Acc_j_ = &Accel[ IDj ];
               //!-------------------------------------------------------
               AccelVis.isLeaf = isLeaf[ID];  AccelVis.ID = ID;
@@ -413,7 +424,7 @@ namespace geo {
               boost::apply_visitor( AccelVis, *JointTypesIter );
             } else {
               Accel_rootVis.u = u[ID];  Accel_rootVis.iD = invD[ID];  Accel_rootVis.ddq = &ddq[ID];
-              Accel_rootVis.P_ = &TransConst[ID];  Accel_rootVis.R_ = &Rot[ID];
+              Accel_rootVis.S = &Screw_w[ID];  Accel_rootVis.P_ = &TransConst[ID];  Accel_rootVis.R_ = &Rot[ID];
               Accel_rootVis.U_ = &U[ID];  Accel_rootVis.Acc_i_ = &Accel[ID];
               //!-------------------------------------------------------
               Accel_rootVis.D_U_h_ = &D_U_h[ID];  Accel_rootVis.D_invD_ = &D_invD[ID];

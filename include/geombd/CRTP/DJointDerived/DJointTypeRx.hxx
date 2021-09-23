@@ -1,3 +1,14 @@
+/**
+ *    \file include/geombd/CRTP/DJointDerived/DJointTypeRx.hxx
+ *    \author Alvaro Paz, Gustavo Arechavaleta
+ *    \version 1.0
+ *    \date 2021
+ *
+ *    Derived class for Rx joint type
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
+ */
+
 #ifndef GEOMBD_DIFFERENTIATION_JOINT_TYPE_REVOLUTE_X_HXX
 #define GEOMBD_DIFFERENTIATION_JOINT_TYPE_REVOLUTE_X_HXX
 
@@ -143,6 +154,7 @@ namespace geo{
     runD_AccelRoot(ScalarType u,
                    ScalarType iD,
                    ScalarType* ddq,
+                   const Eigen::MatrixBase<Vector3Type> & S,
                    const Eigen::MatrixBase<Vector3Type> & P_r,
                    const Eigen::MatrixBase<Matrix3Type> & R_r,
                    const Eigen::MatrixBase<Vector6Type> & U_r,
@@ -165,6 +177,7 @@ namespace geo{
                ScalarType u,
                ScalarType iD,
                ScalarType* ddq,
+               const Eigen::MatrixBase<Vector3Type> & S,
                const Eigen::MatrixBase<Vector3Type> & P_,
                const Eigen::MatrixBase<Matrix3Type> & R_,
                const Eigen::MatrixBase<Vector6Type> & c_,
@@ -742,6 +755,7 @@ namespace geo{
   D_JointTypeRx::runD_AccelRoot(ScalarType u,
                                 ScalarType iD,
                                 ScalarType* ddq,
+                                const Eigen::MatrixBase<Vector3Type> & S,
                                 const Eigen::MatrixBase<Vector3Type> & P_r,
                                 const Eigen::MatrixBase<Matrix3Type> & R_r,
                                 const Eigen::MatrixBase<Vector6Type> & U_r,
@@ -808,6 +822,7 @@ namespace geo{
                             ScalarType u,
                             ScalarType iD,
                             ScalarType* ddq,
+                            const Eigen::MatrixBase<Vector3Type> & S,
                             const Eigen::MatrixBase<Vector3Type> & P_,
                             const Eigen::MatrixBase<Matrix3Type> & R_,
                             const Eigen::MatrixBase<Vector6Type> & c_,

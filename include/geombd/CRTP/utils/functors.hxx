@@ -1,3 +1,14 @@
+/**
+ *    \file include/geombd/CRTP/utils/functors.hxx
+ *    \author Alvaro Paz, Gustavo Arechavaleta
+ *    \version 1.0
+ *    \date 2021
+ *
+ *    Auxiliary functions for CRTP
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
+ */
+
 #ifndef GEOMBD_FUNCTORS_HXX
 #define GEOMBD_FUNCTORS_HXX
 
@@ -585,6 +596,71 @@ namespace geo{
     }
   };
 
+
+  //! Performing Ad_dual*M*Ad statically for Rxyz joint type
+  //!------------------------------------------------------------------------------!//
+  // Forward declaration
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut> struct Mat6ProjRxyzAlgo;
+
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut>
+  void Mat6ProjRxyz(bool P_z,
+                  Eigen::MatrixBase<Vector3Type> & P_,
+                  Eigen::MatrixBase<Matrix3Type> & R_,
+                  const Eigen::MatrixBase<Matrix6TypeIn> & MatIn,
+                  Eigen::MatrixBase<Matrix6TypeOut> & MatOut)
+  { Mat6ProjRxyzAlgo<Vector3Type, Matrix3Type, Matrix6TypeIn, Matrix6TypeOut>::run(P_z, P_, R_, MatIn, MatOut); }
+
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut>
+  struct Mat6ProjRxyzAlgo
+  {
+  public :
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    inline static void run(bool P_z,
+                           Eigen::MatrixBase<Vector3Type> & P_,
+                           Eigen::MatrixBase<Matrix3Type> & R_,
+                           const Eigen::MatrixBase<Matrix6TypeIn> & MatIn,
+                           Eigen::MatrixBase<Matrix6TypeOut> & MatOut)
+    {
+      typedef const Eigen::Block<Matrix6TypeIn,3,3> constBlock3;
+      typedef Eigen::Block<Matrix6TypeOut,3,3> Block3;
+
+      typename Matrix6TypeIn::PlainObject & MatIn_ = const_cast<Matrix6TypeIn &>(MatIn.derived());
+      constBlock3 & Ai = MatIn_.template block<3,3>(0,0);
+      constBlock3 & Bi = MatIn_.template block<3,3>(0,3);
+      constBlock3 & Di = MatIn_.template block<3,3>(3,3);
+
+      Block3 Ao = MatOut.template block<3,3>(0,0);
+      Block3 Bo = MatOut.template block<3,3>(0,3);
+      Block3 Co = MatOut.template block<3,3>(3,0);
+      Block3 Do = MatOut.template block<3,3>(3,3);
+
+      Do.noalias() = R_*Ai; // tmp variable
+      Ao.noalias() = Do*R_.transpose();
+
+      Bo.noalias() = R_*Di; // tmp variable
+      Do.noalias() = Bo*R_.transpose();
+
+      Bo.noalias() = R_*Bi; // tmp variable
+      Co.noalias() = Bo*R_.transpose();
+
+      Bo = Co;
+      if(P_z){
+          //! Linear
+          typename Matrix3Type::PlainObject SkP = Skew(P_);
+          Bo.noalias() -= Ao*SkP;
+
+          typename Matrix3Type::PlainObject Dtmp1;
+          Dtmp1.noalias() = SkP*Bo;
+          Do.noalias() += Dtmp1;
+          Do.noalias() -= Co.transpose()*SkP;
+        }
+
+      Co = Bo.transpose();
+
+    }
+  };
+
 }
 
 
@@ -671,7 +747,7 @@ namespace geo{
       Block3 UL = Adjoint.template block<3,3>(0,0);  Block3 UR = Adjoint.template block<3,3>(0,3);
       Block3 LL = Adjoint.template block<3,3>(3,0);  Block3 LR = Adjoint.template block<3,3>(3,3);
 
-      UL = R_;                    UR = Matrix3Type::Zero();
+      UL = R_;                     UR = Matrix3Type::Zero();
       LL.noalias() = Skew(P_)*R_;  LR = R_;
     }
   };
@@ -880,6 +956,81 @@ namespace geo{
           Co.noalias() = Do*R_.transpose();
 
           Mat3ProjRz(sq, cq, Di, Do);
+
+          Bo = Co;
+          if(P_z){
+              //! Linear
+              Bo.noalias() -= Ao*SkP;
+
+              Dtmp1.noalias() = SkP*Bo;
+              Do.noalias() += Dtmp1;
+              Do.noalias() -= Co.transpose()*SkP;
+            }
+          Co = Bo.transpose();
+        }
+    }
+  };
+
+
+  //! Performing Ad_dual*D_M*Ad statically for Rz joint type
+  //!------------------------------------------------------------------------------!//
+  // Forward declaration
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut> struct D_Mat6ProjRxyzAlgo;
+
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut>
+  void D_Mat6ProjRxyz(bool P_z,
+                      int nS,
+                      Eigen::MatrixBase<Vector3Type> & P_,
+                      Eigen::MatrixBase<Matrix3Type> & R_,
+                      const Eigen::MatrixBase<Matrix6TypeIn> & MatIn,
+                      Eigen::MatrixBase<Matrix6TypeOut> & MatOut)
+  { D_Mat6ProjRxyzAlgo<Vector3Type, Matrix3Type, Matrix6TypeIn, Matrix6TypeOut>::run(P_z, nS, P_, R_, MatIn, MatOut); }
+
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut>
+  struct D_Mat6ProjRxyzAlgo
+  {
+  public :
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    inline static void run(bool P_z,
+                           int nS,
+                           Eigen::MatrixBase<Vector3Type> & P_,
+                           Eigen::MatrixBase<Matrix3Type> & R_,
+                           const Eigen::MatrixBase<Matrix6TypeIn> & MatIn,
+                           Eigen::MatrixBase<Matrix6TypeOut> & MatOut)
+    {
+      typedef const Eigen::Block<Matrix6TypeIn,3,3> constBlock3;
+      typedef Eigen::Block<Matrix6TypeOut,3,3> Block3;
+      //! Linear
+      Matrix3Type SkP, Dtmp1;
+
+      typedef typename Matrix3Type::Scalar MyScalar;
+      MyScalar sq, cq;
+      sq = R_.coeffRef(1,0);  cq = R_.coeffRef(0,0);
+
+      //! Linear
+      if(P_z)  SkP = Skew(P_);
+
+      Matrix6TypeIn & MatIn_ = const_cast<Matrix6TypeIn &>(MatIn.derived());
+
+      for(int iter = 0; iter < nS*6; iter += 6){
+          constBlock3 & Ai = MatIn_.template block<3,3>(iter,0);
+          constBlock3 & Bi = MatIn_.template block<3,3>(iter,3);
+          constBlock3 & Di = MatIn_.template block<3,3>(iter+3,3);
+
+          Block3 Ao = MatOut.template block<3,3>(iter,0);
+          Block3 Bo = MatOut.template block<3,3>(iter,3);
+          Block3 Co = MatOut.template block<3,3>(iter+3,0);
+          Block3 Do = MatOut.template block<3,3>(iter+3,3);
+
+          Do.noalias() = R_*Ai; // tmp variable
+          Ao.noalias() = Do*R_.transpose();
+
+          Bo.noalias() = R_*Di; // tmp variable
+          Do.noalias() = Bo*R_.transpose();
+
+          Bo.noalias() = R_*Bi; // tmp variable
+          Co.noalias() = Bo*R_.transpose();
 
           Bo = Co;
           if(P_z){

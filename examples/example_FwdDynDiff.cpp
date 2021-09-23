@@ -1,12 +1,13 @@
 /**
- *    \file examples/example_FwdDynDiff.cc
+ *    \file examples/example_FwdDynDiff.cpp
  *    \author Alvaro Paz, Gustavo Arechavaleta
  *    \version 1.0
- *    \date 2020
+ *    \date 2021
  *
  *    Example to test the ENHANCED ABA Differentiation wrt state
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
  */
-
 
 //#define EIGEN_RUNTIME_NO_MALLOC
 
@@ -21,7 +22,7 @@
 #include "geombd/io/parser.hpp"
 
 
-#define __FU_PATH_PREFIX__ "../geombd_crtp/data/TROmodels/"
+#define __FU_PATH_PREFIX__ "../../geombd_crtp/data/TROmodels/"
 //std::string urdf_dir = __FU_PATH_PREFIX__ "lwr.urdf"; //7
 std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_python.urdf"; //24
 //std::string urdf_dir = __FU_PATH_PREFIX__ "HRP2.urdf"; //28
@@ -75,16 +76,15 @@ int main(){
 
   //  Eigen::internal::set_is_malloc_allowed(true);
 
-  std::cout<<"Forward dynamics + D = "<<t_total/M<<std::endl;  //! Currently running at 108 micros and 125 expanding
+  std::cout<<"Forward dynamics + D = "<<t_total/M<<std::endl;
 
 
 //  auto ddq_crtp = robotDynamics->ddq;
 //  std::cout<<"ddq = "<<ddq_crtp.cwiseAbs().sum()<<std::endl;
-//  std::cout<<ddq_crtp.transpose()<<std::endl;
+//  std::cout << std::scientific << std::setprecision(20) << ddq_crtp.transpose() << std::endl;
 //  //!-------------------------------------------------------
 //  auto D_ddq_crtp = robotDynamics->D_ddq;
-//  std::cout << "D_ddq_crtp = "<< std::endl<< std::scientific << std::setprecision(20) << D_ddq_crtp<< std::endl;
-
+//  std::cout << "D_ddq_crtp = "<< std::endl<< std::scientific << std::setprecision(20) << D_ddq_crtp << std::endl;
 
 
 //  //!------------------------------------------------------------------------------!//
@@ -128,4 +128,3 @@ int main(){
 
   return 0;
 }
-

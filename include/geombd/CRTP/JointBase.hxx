@@ -1,3 +1,14 @@
+/**
+ *    \file include/geombd/CRTP/JointBase.hxx
+ *    \author Alvaro Paz, Gustavo Arechavaleta
+ *    \version 1.0
+ *    \date 2021
+ *
+ *    Class to implement the CRTP base (interface)
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
+ */
+
 #ifdef EIGEN_VECTORIZE
 
 #endif

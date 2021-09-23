@@ -1,3 +1,14 @@
+/**
+ *    \file include/geombd/io/parser.cpp
+ *    \author Keny Ordaz
+ *    \version 1.0
+ *    \date 2021
+ *
+ *    Class to parse a multibody system from URDF
+ *    Copyright (c) 2021 Cinvestav
+ *    This library is distributed under the MIT License.
+ */
+
 /*#include <iostream>
 #include <iomanip>
 #include <vector>
