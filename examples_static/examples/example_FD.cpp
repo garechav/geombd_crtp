@@ -1,5 +1,5 @@
 /**
- *    \file examples/example_FD_hrp2.cpp
+ *    \file examples/example_FD.cpp
  *    \author Alvaro Paz, Gustavo Arechavaleta
  *    \version 1.0
  *    \date 2020
@@ -20,7 +20,7 @@
 #include "geombd/io/parser.hpp"
 
 #define __FU_PATH_PREFIX__ "../../../data/TROmodels/"
-std::string urdf_dir = __FU_PATH_PREFIX__ "HRP2.urdf";
+std::string urdf_dir = __FU_PATH_PREFIX__;
 
 //! Set time variables
 const int M = 100000;    // sample size;
@@ -38,7 +38,9 @@ void loop_ABA ( std::shared_ptr< geoCRTP::FwdDynCRTP< DataType > > robotDynamics
     }
 }
 
-int main(){
+int main(int argc, char** argv){
+  urdf_dir.append( argv[1] );
+
   //! Light-weight parser
   //!------------------------------------------------------------------------------!//
   auto robot = Robot::build_model(urdf_dir);
@@ -65,7 +67,7 @@ int main(){
 
   //  Eigen::internal::set_is_malloc_allowed(true);
 
-  std::cout<<"HRP2 Forward Dynamics = "<<t_total/M<<std::endl;
+  std::cout<<"--> "<<argv[1]<<" Forward Dynamics = "<<t_total/M<<" microsecs"<<std::endl;
 
 //  std::cout<<"FD = "<<robotDynamics->ddq.transpose()<<std::endl;
 

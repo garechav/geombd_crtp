@@ -1,5 +1,5 @@
 /**
- *    \file examples/example_D_FD_atlas.cpp
+ *    \file examples/example_D_FD_nao.cpp
  *    \author Alvaro Paz, Gustavo Arechavaleta
  *    \version 1.0
  *    \date 2020
@@ -22,7 +22,7 @@
 
 
 #define __FU_PATH_PREFIX__ "../../../data/TROmodels/"
-std::string urdf_dir = __FU_PATH_PREFIX__ "atlas.urdf"; //30
+std::string urdf_dir = __FU_PATH_PREFIX__;
 
 
 //! Set time variables
@@ -42,7 +42,9 @@ void loop_ABA ( std::shared_ptr< geo::FwdDynDifCRTP< DataType > > robotDynamics 
 }
 
 
-int main(){
+int main(int argc, char** argv){
+  urdf_dir.append( argv[1] );
+
   //! Light-weight parser
   //!------------------------------------------------------------------------------!//
   auto robot = Robot::build_model(urdf_dir);
@@ -72,7 +74,7 @@ int main(){
 
   //  Eigen::internal::set_is_malloc_allowed(true);
 
-  std::cout<<"Atlas Forward Dynamics + D = "<<t_total/M<<std::endl;
+  std::cout<<"--> "<<argv[1]<<" Forward Dynamics + derivative = "<<t_total/M<<" microsecs"<<std::endl;
 
 
 //  auto ddq_crtp = robotDynamics->ddq;
