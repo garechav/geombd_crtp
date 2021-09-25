@@ -23,5 +23,11 @@ To install this project,
 $ ./install.sh
 ```
 
+To run examples,
+
+```
+$ ./run.sh
+```
+
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
