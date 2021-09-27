@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+CMakeLists.txt.user
+eigen3/
+build/
+build-examples_static-Desktop-Release/
+geombd/
+examples_static/CMakeLists.txt.user
+examples_static/build
