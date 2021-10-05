@@ -230,6 +230,81 @@ namespace geoCRTP{
   };
 
 
+  //!------------------------------------------------------------------------------!//
+  //!----------------------Inverse Inertia Matrix Visitors-------------------------!//
+  //!------------------------------------------------------------------------------!//
+
+
+  //! Visitor for U & invD expressions
+  //!------------------------------------------------------------------------------!//
+  template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type>
+  class UinvD_visitor : public boost::static_visitor<int> {
+  public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    //! Constructor
+    UinvD_visitor( ) : iD(nullptr), S(nullptr), U_(nullptr), M_A_(nullptr) {}
+
+    //! Members
+    ScalarType* iD;  Vector3Type* S;  Vector6Type* U_;  Matrix6Type* M_A_;
+
+    //! Method -> member function
+    template<typename Derived>
+    int operator()(CRTPInterface<Derived> & BaseType) const {
+      ScalarType & iD_ = (*iD);
+      BaseType.UinvD(iD_, (*S).derived(), (*U_).derived(), (*M_A_).derived());
+      return 0;
+    }
+
+  };
+
+
+  //! Visitor for inverse inertia expressions
+  //!------------------------------------------------------------------------------!//
+  template<typename IntType, typename ScalarType, typename Vector3Type, typename D_Vector6Type, typename RowVectorXrType>
+  class invInertia_visitor : public boost::static_visitor<int> {
+  public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    //! Constructor
+    invInertia_visitor( ) : iD(nullptr), S(nullptr), Fcrb_(nullptr), iHrow_(nullptr) {}
+
+    //! Members
+    IntType n_ID;   ScalarType* iD;   Vector3Type* S;  D_Vector6Type* Fcrb_;  RowVectorXrType* iHrow_;
+
+    //! Method -> member function
+    template<typename Derived>
+    int operator()(CRTPInterface<Derived> & BaseType) const {
+      ScalarType & iD_ = (*iD);
+      BaseType.invInertia(n_ID, iD_, (*S).derived(), (*Fcrb_).derived(), (*iHrow_).derived());
+      return 0;
+    }
+
+  };
+
+
+  //! Visitor for H selector
+  //!------------------------------------------------------------------------------!//
+  template<typename IntType, typename Vector3Type, typename D_Vector6Type, typename MatrixXrType>
+  class HSelector_visitor : public boost::static_visitor<int> {
+  public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    //! Constructor
+    HSelector_visitor( ) : S_(nullptr), Pc_(nullptr), iH_total_(nullptr) {}
+
+    //! Members
+    IntType n, ID;   Vector3Type* S_;  D_Vector6Type* Pc_;  MatrixXrType* iH_total_;
+
+    //! Method -> member function
+    template<typename Derived>
+    int operator()(CRTPInterface<Derived> & BaseType) const {
+      BaseType.invInertia(n, ID, (*S_).derived(), (*Pc_).derived(), (*iH_total_).derived());
+      return 0;
+    }
+
+  };
+
 }
 
 #endif // GEOMBD_VISITORS_HXX

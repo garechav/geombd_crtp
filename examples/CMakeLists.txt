@@ -17,3 +17,8 @@ target_link_libraries (example_FwdDynDiff forward-dynamics-diff-crtp ${PACKAGE_N
 add_executable(example_FwdDyn_plus_Diff example_FwdDyn_plus_Diff.cpp)
 target_link_libraries (example_FwdDyn_plus_Diff forward-dynamics-crtp forward-dynamics-diff-crtp ${PACKAGE_NAME}-io)
 
+#!------------------------------------------------------
+#! Inverse of H example
+add_executable(example_inv_H example_inv_H.cpp)
+target_link_libraries (example_inv_H forward-dynamics-crtp ${PACKAGE_NAME}-io)
+

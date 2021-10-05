@@ -151,6 +151,46 @@ namespace geoCRTP{
     }
 
 
+    //!------------------------------------------------------------------------------!//
+    //!----------------------Inverse Inertia Matrix Visitors-------------------------!//
+    //!------------------------------------------------------------------------------!//
+
+
+    //! Recurring Pattern for U & invD expressions.
+    template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type>
+    EIGEN_ALWAYS_INLINE void
+    UinvD(ScalarType & iD,
+          const Eigen::MatrixBase<Vector3Type> & S_,
+          Eigen::MatrixBase<Vector6Type> & U_r,
+          const Eigen::MatrixBase<Matrix6Type> & M_A_r) {
+      static_cast<Derived*>(this)->runUinvD(iD, S_, U_r, M_A_r);
+    }
+
+
+    //! Recurring inverse inertia expressions.
+    template<typename IntType, typename ScalarType, typename Vector3Type, typename D_Vector6Type, typename RowVectorXrType>
+    EIGEN_ALWAYS_INLINE void
+    invInertia(IntType n_ID,
+               ScalarType & iD,
+               const Eigen::MatrixBase<Vector3Type> & S_,
+               const Eigen::MatrixBase<D_Vector6Type> & Fcrb_r,
+               Eigen::MatrixBase<RowVectorXrType> & iHrow_r) {
+      static_cast<Derived*>(this)->runInvInertia(n_ID, iD, S_, Fcrb_r, iHrow_r);
+    }
+
+
+    //! Recurring H inertia selector.
+    template<typename IntType, typename Vector3Type, typename D_Vector6Type, typename MatrixXrType>
+    EIGEN_ALWAYS_INLINE void
+    HSelector(IntType n,
+              IntType ID,
+              const Eigen::MatrixBase<Vector3Type> & S_,
+              const Eigen::MatrixBase<D_Vector6Type> & Pc_,
+              Eigen::MatrixBase<MatrixXrType> & iH_total_) {
+      static_cast<Derived*>(this)->runHSelector(n, ID, S_, Pc_, iH_total_);
+    }
+
+
   };
 
 
