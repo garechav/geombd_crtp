@@ -16,6 +16,8 @@
 #include "Eigen/Core"
 #include "Eigen/Geometry"
 
+#include <iostream>
+
 namespace geoCRTP{
 
 
@@ -158,8 +160,8 @@ namespace geoCRTP{
     runHSelector(IntType n,
                  IntType ID,
                  const Eigen::MatrixBase<Vector3Type> & S,
-                 const Eigen::MatrixBase<D_Vector6Type> & Pc_,
-                 Eigen::MatrixBase<MatrixXrType> & iH_total_);
+                 Eigen::MatrixBase<D_Vector6Type> & Pc_,
+                 const Eigen::MatrixBase<MatrixXrType> & iH_total_);
 
 
   };
@@ -583,8 +585,8 @@ namespace geoCRTP{
   JointTypeRxyz::runHSelector(IntType n,
                               IntType ID,
                               const Eigen::MatrixBase<Vector3Type> & S,
-                              const Eigen::MatrixBase<D_Vector6Type> & Pc_,
-                              Eigen::MatrixBase<MatrixXrType> & iH_total_) {
+                              Eigen::MatrixBase<D_Vector6Type> & Pc_,
+                              const Eigen::MatrixBase<MatrixXrType> & iH_total_) {
 
     Pc_.setZero();
     Pc_.bottomRightCorner(3,n-ID) = S*iH_total_.block(ID,ID,1,n-ID);

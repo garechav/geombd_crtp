@@ -69,8 +69,9 @@ int main(){
   //  Eigen::internal::set_is_malloc_allowed(true);
 
   std::cout<<"Inverse of Inertia Matrix = "<<t_total/M<<std::endl;
-
-//  std::cout<<"FD = "<< std::scientific << std::setprecision(20) <<robotDynamics->ddq.transpose()<<std::endl<<std::endl<<std::endl;
+//  std::cout<<"inv(H) = "<<std::endl<< std::scientific << std::setprecision(20) <<robotDynamics->inv_H<<std::endl;
+  std::cout<<"sum(sum(abs( inv(H) ))) = "<< std::scientific << std::setprecision(20) <<robotDynamics->inv_H.cwiseAbs().sum()<<std::endl;
+  std::cout<<"error = "<<robotDynamics->inv_H.cwiseAbs().sum()-1.91743564889628964011e+05<<std::endl;
 
   return 0;
 }

@@ -185,8 +185,8 @@ namespace geoCRTP{
     HSelector(IntType n,
               IntType ID,
               const Eigen::MatrixBase<Vector3Type> & S_,
-              const Eigen::MatrixBase<D_Vector6Type> & Pc_,
-              Eigen::MatrixBase<MatrixXrType> & iH_total_) {
+              Eigen::MatrixBase<D_Vector6Type> & Pc_,
+              const Eigen::MatrixBase<MatrixXrType> & iH_total_) {
       static_cast<Derived*>(this)->runHSelector(n, ID, S_, Pc_, iH_total_);
     }
 

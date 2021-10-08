@@ -121,29 +121,29 @@ namespace geoCRTP
           Vector3r axis = joint->axis;          
           Screw_w.push_back(axis);
 
-//          if (joint->type == Joint::joint_type::prismatic) {
-//              //!-------------------------------------------------------
-//              //! code here for Joint Types Px Py and Pz
-//            }
-//          if (joint->type == Joint::joint_type::revolute) {
-//              //!-------------------------------------------------------
-//              if((real_t)axis(0) == 1) {
-//                  JointTypesVec.push_back( JointTypeRx{} );
-//                }
-//              //!-------------------------------------------------------
-//              if((real_t)axis(1) == 1) {
-//                  JointTypesVec.push_back( JointTypeRy{} );
-//                }
-//              //!-------------------------------------------------------
-//              if((real_t)axis(2) == 1) {
-//                  JointTypesVec.push_back( JointTypeRz{} );
-//                }
-//              //!-------------------------------------------------------
-//              if((real_t)axis(1) != 0 && (real_t)axis(2) != 0) {
+          if (joint->type == Joint::joint_type::prismatic) {
+              //!-------------------------------------------------------
+              //! code here for Joint Types Px Py and Pz
+            }
+          if (joint->type == Joint::joint_type::revolute) {
+              //!-------------------------------------------------------
+              if((real_t)axis(0) == 1) {
+                  JointTypesVec.push_back( JointTypeRx{} );
+                }
+              //!-------------------------------------------------------
+              if((real_t)axis(1) == 1) {
+                  JointTypesVec.push_back( JointTypeRy{} );
+                }
+              //!-------------------------------------------------------
+              if((real_t)axis(2) == 1) {
+                  JointTypesVec.push_back( JointTypeRz{} );
+                }
+              //!-------------------------------------------------------
+              if((real_t)axis(1) != 0 && (real_t)axis(2) != 0) {
                   JointTypesVec.push_back( JointTypeRxyz{} );
-//                }
+                }
 
-//            }
+            }
 
           ID++;
         }
@@ -169,7 +169,7 @@ namespace geoCRTP
     std::vector< index_t > parent;
 
     //! Joint-types variant
-    typedef boost::variant<JointTypeRxyz> CV;//, JointTypeRy, JointTypeRz, JointTypeRxyz> CV;
+    typedef boost::variant<JointTypeRx, JointTypeRy, JointTypeRz, JointTypeRxyz> CV;
 
     //! Joint-types vector
     std::vector< CV > JointTypesVec;
@@ -449,6 +449,9 @@ namespace geoCRTP
 
               M_A[ parent[ID] ] += M_aux_out;
             }
+
+//          std::cout<<"Fcrb "<<ID<<" = "<<D_Fcrb[ parent[ID] ].cwiseAbs().sum()<<std::endl;
+
           ID--;
         }
 
@@ -469,6 +472,7 @@ namespace geoCRTP
 
           HSelectorVis.n = n;      HSelectorVis.ID = ID;  HSelectorVis.S_ = &Screw_w[ID];
           HSelectorVis.Pc_ = &Pc;  HSelectorVis.iH_total_ = &inv_H;
+          boost::apply_visitor( HSelectorVis, *JointTypesIter );
 
           if (NP[ID]!=1) {
               Pc.rightCols(n-ID) += Adjoint.transpose()*D_Fcrb[ parent[ID] ].middleCols(ID,n-ID);

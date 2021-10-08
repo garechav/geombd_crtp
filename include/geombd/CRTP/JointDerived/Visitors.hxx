@@ -299,7 +299,7 @@ namespace geoCRTP{
     //! Method -> member function
     template<typename Derived>
     int operator()(CRTPInterface<Derived> & BaseType) const {
-      BaseType.invInertia(n, ID, (*S_).derived(), (*Pc_).derived(), (*iH_total_).derived());
+      BaseType.HSelector(n, ID, (*S_).derived(), (*Pc_).derived(), (*iH_total_).derived());
       return 0;
     }
 

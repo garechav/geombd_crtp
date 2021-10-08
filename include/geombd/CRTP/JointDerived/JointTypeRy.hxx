@@ -127,6 +127,40 @@ namespace geoCRTP{
                  const Eigen::MatrixBase<Vector6Type> & U_r,
                  Eigen::MatrixBase<Vector6Type> & Acc_i_r);
 
+
+    //!------------------------------------------------------------------------------!//
+    //!-----------------------Inverse Inertia Matrix Memberss-------------------------!//
+    //!------------------------------------------------------------------------------!//
+
+
+    //! UinvD Forward Declaration.
+    template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type>
+    inline static void
+    runUinvD(ScalarType & iD,
+             const Eigen::MatrixBase<Vector3Type> & S,
+             Eigen::MatrixBase<Vector6Type> & U_r,
+             const Eigen::MatrixBase<Matrix6Type> & M_A_r);
+
+
+    //! Inverse Inertia Declaration.
+    template<typename IntType, typename ScalarType, typename Vector3Type, typename D_Vector6Type, typename RowVectorXrType>
+    inline static void
+    runInvInertia(IntType n_ID,
+                  ScalarType & iD,
+                  const Eigen::MatrixBase<Vector3Type> & S,
+                  const Eigen::MatrixBase<D_Vector6Type> & Fcrb_r,
+                  Eigen::MatrixBase<RowVectorXrType> & iHrow_r);
+
+
+    //! H Inertia Selector.
+    template<typename IntType, typename Vector3Type, typename D_Vector6Type, typename MatrixXrType>
+    inline static void
+    runHSelector(IntType n,
+                 IntType ID,
+                 const Eigen::MatrixBase<Vector3Type> & S,
+                 Eigen::MatrixBase<D_Vector6Type> & Pc_,
+                 const Eigen::MatrixBase<MatrixXrType> & iH_total_);
+
   };
 
 
@@ -476,6 +510,54 @@ namespace geoCRTP{
     //! Update spatial acceleration.
     //!------------------------------------------------------------------------------!//
     Acc_i_r.coeffRef(4) = ddq_;
+  }
+
+
+  //!------------------------------------------------------------------------------!//
+  //!-----------------------Inverse Inertia Matrix Methods-------------------------!//
+  //!------------------------------------------------------------------------------!//
+
+
+  //! Implementation for U & invD.
+  template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type>
+  inline void
+  JointTypeRy::runUinvD(ScalarType & iD,
+                        const Eigen::MatrixBase<Vector3Type> & S,
+                        Eigen::MatrixBase<Vector6Type> & U_r,
+                        const Eigen::MatrixBase<Matrix6Type> & M_A_r) {
+
+    U_r = M_A_r.template col(4);
+    iD = 1 / U_r.coeff(4);
+
+  }
+
+
+  //! Implementation for Inverse Inertia Declaration.
+  template<typename IntType, typename ScalarType, typename Vector3Type, typename D_Vector6Type, typename RowVectorXrType>
+  inline void
+  JointTypeRy::runInvInertia(IntType n_ID,
+                             ScalarType & iD,
+                             const Eigen::MatrixBase<Vector3Type> & S,
+                             const Eigen::MatrixBase<D_Vector6Type> & Fcrb_r,
+                             Eigen::MatrixBase<RowVectorXrType> & iHrow_r) {
+
+    iHrow_r.noalias() = iD*Fcrb_r.row(4).tail(n_ID);
+
+  }
+
+
+  //! Implementation for H Inertia Selector.
+  template<typename IntType, typename Vector3Type, typename D_Vector6Type, typename MatrixXrType>
+  inline void
+  JointTypeRy::runHSelector(IntType n,
+                            IntType ID,
+                            const Eigen::MatrixBase<Vector3Type> & S,
+                            Eigen::MatrixBase<D_Vector6Type> & Pc_,
+                            const Eigen::MatrixBase<MatrixXrType> & iH_total_) {
+
+    Pc_.setZero();
+    Pc_.block(4,ID,1,n-ID) = iH_total_.block(ID,ID,1,n-ID);
+
   }
 
 
