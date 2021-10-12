@@ -9,6 +9,7 @@
  *    This library is distributed under the MIT License.
  */
 
+//#define EIGEN_NO_MALLOC
 //#define EIGEN_RUNTIME_NO_MALLOC
 #define EIGEN_NO_DEBUG
 
@@ -57,7 +58,7 @@ int main(){
   n = robot.value()->nq;
   q   = VectorXr::LinSpaced(n, 1, 2*3.1416);
 
-  //  Eigen::internal::set_is_malloc_allowed(false); //! false to enable it
+//  Eigen::internal::set_is_malloc_allowed(false); //! false to enable it
 
   //! Perform the inv H loop
   t1 = std::chrono::high_resolution_clock::now();
@@ -66,7 +67,7 @@ int main(){
 
   auto t_total = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
 
-  //  Eigen::internal::set_is_malloc_allowed(true);
+//  Eigen::internal::set_is_malloc_allowed(true);
 
   std::cout<<"Inverse of Inertia Matrix = "<<t_total/M<<std::endl;
 //  std::cout<<"inv(H) = "<<std::endl<< std::scientific << std::setprecision(20) <<robotDynamics->inv_H<<std::endl;

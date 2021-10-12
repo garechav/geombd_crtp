@@ -52,7 +52,7 @@ namespace geoCRTP
 
     typedef Eigen::Matrix<real_t, Eigen::Dynamic, Eigen::Dynamic, 0, maxBody, maxBody> MatrixXr;
     typedef Eigen::Matrix<real_t, 1, Eigen::Dynamic, Eigen::RowMajor, 1, maxBody> RowVectorXr;
-    typedef Eigen::Matrix<real_t, 6, Eigen::Dynamic, 0, 6, 2*maxBody> D_SpatialVector;
+    typedef Eigen::Matrix<real_t, 6, Eigen::Dynamic, 0, 6, maxBody> D_SpatialVector;
 
     // --------------------------------------------
     // Constructors and Destructors
@@ -94,7 +94,7 @@ namespace geoCRTP
           P_a.push_back(SpatialVector::Zero());
           P_A.push_back(SpatialVector::Zero());
 
-          D_Fcrb.push_back(D_SpatialVector::Zero(6,2*n));
+          D_Fcrb.push_back(D_SpatialVector::Zero(6,n));
           D_Pc.push_back(D_SpatialVector::Zero(6,n));
 
           u.push_back(0);  invD.push_back(0);
@@ -362,14 +362,13 @@ namespace geoCRTP
           visitorFK.qi = q(ID);  visitorFK.S = &Screw_w[ID];  visitorFK.R = &Rot[ID];
           boost::apply_visitor( visitorFK, *JointTypesIter );
 
-          D_Fcrb[ID].setZero();  //! is it really neccesary?
-          D_Pc[ID].setZero();  //! is it really neccesary?
+          D_Fcrb[ID].setZero();
 
           ID++;
         }
 
       //! Initialize inertial terms
-      inv_H.setZero();  //! is it really neccesary?
+      inv_H.setZero();
       M_A = MConst;
 
       //! Second Recursion
@@ -449,8 +448,6 @@ namespace geoCRTP
 
               M_A[ parent[ID] ] += M_aux_out;
             }
-
-//          std::cout<<"Fcrb "<<ID<<" = "<<D_Fcrb[ parent[ID] ].cwiseAbs().sum()<<std::endl;
 
           ID--;
         }
