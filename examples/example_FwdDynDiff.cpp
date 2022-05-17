@@ -22,7 +22,7 @@
 #include "geombd/io/parser.hpp"
 
 
-#define __FU_PATH_PREFIX__ "../../data/TROmodels/"
+#define __FU_PATH_PREFIX__ "../../geombd_simplex/data/TROmodels/"
 //std::string urdf_dir = __FU_PATH_PREFIX__ "lwr.urdf"; //7
 std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_python.urdf"; //24
 //std::string urdf_dir = __FU_PATH_PREFIX__ "HRP2.urdf"; //28
@@ -72,19 +72,20 @@ int main(){
   loop_ABA( robotDynamics );
   t2 = std::chrono::high_resolution_clock::now();
 
-  auto t_total = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+  auto t_total = std::chrono::duration_cast<std::chrono::nanoseconds>( t2 - t1 ).count();
 
   //  Eigen::internal::set_is_malloc_allowed(true);
 
   std::cout<<"Forward dynamics + D = "<<t_total/M<<std::endl;
 
 
-//  auto ddq_crtp = robotDynamics->ddq;
+  auto ddq_crtp = robotDynamics->ddq;
 //  std::cout<<"ddq = "<<ddq_crtp.cwiseAbs().sum()<<std::endl;
-//  std::cout << std::scientific << std::setprecision(20) << ddq_crtp.transpose() << std::endl;
-//  //!-------------------------------------------------------
-//  auto D_ddq_crtp = robotDynamics->D_ddq;
-//  std::cout << "D_ddq_crtp = "<< std::endl<< std::scientific << std::setprecision(20) << D_ddq_crtp << std::endl;
+//  std::cout << std::scientific << std::setprecision(20) << ddq_crtp.cwiseAbs().sum() << std::endl;
+  //!-------------------------------------------------------
+  auto D_ddq_crtp = robotDynamics->D_ddq;
+  double errr = D_ddq_crtp.cwiseAbs().sum() - 9.93696605170474795159e+04;
+  std::cout << "D_ddq_crtp error = "<< std::endl<< std::scientific << std::setprecision(20) << errr << std::endl;
 
 
 //  //!------------------------------------------------------------------------------!//
