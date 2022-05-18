@@ -112,7 +112,55 @@ namespace geo{
   };
 
 
+  //! Inertia 01 Visitor
+  //!------------------------------------------------------------------------------!//
+  template<typename Vector6Type, typename Matrix6Type, typename VectorXType, typename D_Matrix6Type>
+  class Inertia01_visitor : public boost::static_visitor<int> {
+  public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+    //! Constructor
+    Inertia01_visitor( ) : U_(nullptr), M_A_(nullptr), D_U_v_(nullptr), D_M_A_i_(nullptr) {}
+
+    //! Members
+    Vector6Type* U_;  Matrix6Type* M_A_;  VectorXType* D_U_v_;  D_Matrix6Type* D_M_A_i_;
+
+    //! Method -> member function
+    template<typename Derived>
+    int operator()(D_CRTPInterface<Derived> & BaseType) const {
+      BaseType.Inertia01((*U_).derived(), (*M_A_).derived(), (*D_U_v_).derived(), (*D_M_A_i_).derived());
+      return 0;
+    }
+
+  };
+
+
+  //! Inertia 02 Visitor
+  //!------------------------------------------------------------------------------!//
+  template<typename ScalarType, typename Vector6Type, typename RowVectorXType, typename D_Vector6Type>
+  class Inertia02_visitor : public boost::static_visitor<int> {
+  public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    //! Constructor
+    Inertia02_visitor( ) : U_(nullptr), P_A_(nullptr), D_invD_(nullptr), D_q_u_(nullptr), D_dq_u_(nullptr),
+      D_U_h_(nullptr), D_q_PA_(nullptr), D_dq_PA_(nullptr) {}
+
+    //! Members
+    ScalarType* invD_;  ScalarType* u_;  Vector6Type* U_;  Vector6Type* P_A_;
+    RowVectorXType* D_invD_;  RowVectorXType* D_q_u_;  RowVectorXType* D_dq_u_;
+    D_Vector6Type* D_U_h_;  D_Vector6Type* D_q_PA_;  D_Vector6Type* D_dq_PA_;
+
+    //! Method -> member function
+    template<typename Derived>
+    int operator()(D_CRTPInterface<Derived> & BaseType) const {
+      ScalarType & _u_ = (*u_);  ScalarType & _invD_ = (*invD_);
+      BaseType.Inertia02(_invD_, _u_, (*U_).derived(), (*P_A_).derived(), (*D_invD_).derived(), (*D_q_u_).derived(),
+                         (*D_dq_u_).derived(), (*D_U_h_).derived(), (*D_q_PA_).derived(), (*D_dq_PA_).derived());
+      return 0;
+    }
+
+  };
 
 
 

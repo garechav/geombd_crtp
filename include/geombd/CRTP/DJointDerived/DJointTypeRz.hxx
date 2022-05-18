@@ -129,6 +129,55 @@ namespace geo{
     }
 
 
+    //! Inertial Terms 01 Declaration.
+    //!------------------------------------------------------------------------------!//
+    template<typename Vector6Type, typename Matrix6Type, typename VectorXType, typename D_Matrix6Type>
+    inline static void
+    runInertia01(typename Eigen::MatrixBase<Vector6Type> & U_,
+                 typename Eigen::MatrixBase<Matrix6Type> & M_A_,
+                 typename Eigen::MatrixBase<VectorXType> & D_U_v_,
+                 typename Eigen::MatrixBase<D_Matrix6Type> & D_M_A_i_) {
+
+      //! Solve U and its partial derivative.
+      //!------------------------------------------------------------------------------!//
+      U_ = M_A_.template rightCols<1>();
+      //!------------------------------------------------------------------------------!//
+      D_U_v_ = D_M_A_i_.template rightCols<1>();
+
+    }
+
+
+    //! Inertial Terms 02 Declaration.
+    //!------------------------------------------------------------------------------!//
+    template<typename ScalarType, typename Vector6Type, typename RowVectorXType, typename D_Vector6Type>
+    inline static void
+    runInertia02(ScalarType & invD_,
+                 ScalarType & u_,
+                 typename Eigen::MatrixBase<Vector6Type> & U_,
+                 typename Eigen::MatrixBase<Vector6Type> & P_A_,
+                 typename Eigen::MatrixBase<RowVectorXType> & D_invD_,
+                 typename Eigen::MatrixBase<RowVectorXType> & D_q_u_,
+                 typename Eigen::MatrixBase<RowVectorXType> & D_dq_u_,
+                 typename Eigen::MatrixBase<D_Vector6Type> & D_U_h_,
+                 typename Eigen::MatrixBase<D_Vector6Type> & D_q_PA_,
+                 typename Eigen::MatrixBase<D_Vector6Type> & D_dq_PA_) {
+
+      //! Solve the inverse of D and its partial derivative.
+      //!------------------------------------------------------------------------------!//
+      invD_ = 1 / U_.coeffRef(5);
+      //!------------------------------------------------------------------------------!//
+      D_invD_.noalias() = -pow(invD_,2)*D_U_h_.template bottomRows<1>();
+
+      //! Solve u and its partial derivative.
+      //!------------------------------------------------------------------------------!//
+      u_ -= P_A_.coeffRef(5);
+      //!------------------------------------------------------------------------------!//
+      D_q_u_  = -D_q_PA_.template bottomRows<1>();
+      D_dq_u_ = -D_dq_PA_.template bottomRows<1>();
+
+    }
+
+
   };
 
 } // end namespace geo

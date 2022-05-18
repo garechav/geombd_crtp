@@ -24,7 +24,7 @@
 
 #define __FU_PATH_PREFIX__ "../../geombd_simplex/data/TROmodels/"
 //std::string urdf_dir = __FU_PATH_PREFIX__ "lwr.urdf"; //7
-std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_python.urdf"; //24
+std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_Z_python.urdf"; //24
 //std::string urdf_dir = __FU_PATH_PREFIX__ "HRP2.urdf"; //28
 //std::string urdf_dir = __FU_PATH_PREFIX__ "atlas.urdf"; //30
 

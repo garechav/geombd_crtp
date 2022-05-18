@@ -86,6 +86,42 @@ namespace geo {
     }
 
 
+    //! Recurring Pattern for the Inertial Terms 01.
+    template<typename Vector6Type, typename Matrix6Type, typename VectorXType, typename D_Matrix6Type>
+    EIGEN_ALWAYS_INLINE void
+    Inertia01(typename Eigen::MatrixBase<Vector6Type> & U_,
+              typename Eigen::MatrixBase<Matrix6Type> & M_A_,
+              typename Eigen::MatrixBase<VectorXType> & D_U_v_,
+              typename Eigen::MatrixBase<D_Matrix6Type> & D_M_A_i_) {
+      static_cast<Derived*>(this)->runInertia01(U_.derived(), M_A_.derived(), D_U_v_.derived(), D_M_A_i_.derived());
+    }
+
+
+    //! Recurring Pattern for the Inertial Terms 02.
+    template<typename ScalarType, typename Vector6Type, typename RowVectorXType, typename D_Vector6Type>
+    EIGEN_ALWAYS_INLINE void
+    Inertia02(ScalarType & invD_,
+              ScalarType & u_,
+              typename Eigen::MatrixBase<Vector6Type> & U_,
+              typename Eigen::MatrixBase<Vector6Type> & P_A_,
+              typename Eigen::MatrixBase<RowVectorXType> & D_invD_,
+              typename Eigen::MatrixBase<RowVectorXType> & D_q_u_,
+              typename Eigen::MatrixBase<RowVectorXType> & D_dq_u_,
+              typename Eigen::MatrixBase<D_Vector6Type> & D_U_h_,
+              typename Eigen::MatrixBase<D_Vector6Type> & D_q_PA_,
+              typename Eigen::MatrixBase<D_Vector6Type> & D_dq_PA_) {
+      static_cast<Derived*>(this)->runInertia02(invD_, u_, U_.derived(), P_A_.derived(), D_invD_.derived(), D_q_u_.derived(),
+                                                D_dq_u_.derived(), D_U_h_.derived(), D_q_PA_.derived(), D_dq_PA_.derived());
+    }
+
+
+
+
+
+
+
+
+
 
 
 
