@@ -264,6 +264,9 @@ namespace geo {
 
     Inertia01_visitor<SpatialVector, SpatialMatrix, VectorXr, D_SpatialMatrix> visitorInertia01;
     Inertia02_visitor<ScalarType, SpatialVector, RowVectorXr, D_SpatialVector> visitorInertia02;
+    Inertia03_visitor<index_t, Vector3r, Matrix3r, SpatialVector, SpatialMatrix, D_SpatialMatrix> visitorInertia03;
+    Leaf01_visitor<ScalarType, SpatialVector, SpatialMatrix, RowVectorXr, D_SpatialVector> visitorLeaf01;
+    Leaf02_visitor<Vector3r, Matrix3r, SpatialVector, SpatialMatrix, D_SpatialMatrix> visitorLeaf02;
 
 
     //    D_TCP_root_visitor<ScalarType, Vector3r, SpatialVector, SpatialMatrix, D_SpatialVector> TCP_rootVis;
@@ -552,10 +555,10 @@ namespace geo {
 
               //! Call CRTP visitor.
               //!------------------------------------------------------------------------------!//
-              visitorInertia02.invD_ = &invD[ID];  visitorInertia02.u_ = &u[ID];
-              visitorInertia02.U_ = &U[ID];  visitorInertia02.P_A_ = &P_A[ID];
-              visitorInertia02.D_invD_ = &D_invD[ID];  visitorInertia02.D_q_u_ = &D_q_u[ID];  visitorInertia02.D_dq_u_ = &D_dq_u[ID];
-              visitorInertia02.D_U_h_ = &D_U_h[ID];  visitorInertia02.D_q_PA_ = &D_q_PA[ID];  visitorInertia02.D_dq_PA_ = &D_dq_PA[ID];
+              visitorInertia02.invD_ = &invD[ID];      visitorInertia02.u_ = &u[ID];
+              visitorInertia02.U_ = &U[ID];            visitorInertia02.P_A_ = &P_A[ID];
+              visitorInertia02.D_invD_ = &D_invD[ID];  visitorInertia02.D_q_u_ = &D_q_u[ID];    visitorInertia02.D_dq_u_ = &D_dq_u[ID];
+              visitorInertia02.D_U_h_ = &D_U_h[ID];    visitorInertia02.D_q_PA_ = &D_q_PA[ID];  visitorInertia02.D_dq_PA_ = &D_dq_PA[ID];
               boost::apply_visitor( visitorInertia02, *JointTypesIter );
 
 
@@ -594,10 +597,7 @@ namespace geo {
                   kronAux.noalias() = D_M_A_i_*Cbias[ID];
 
                   //! then D_MtmpII = D_M_a and D_MtmpI is AdjointDual*D_M_a*Adjoint
-//!------------------------------------------------------------------------------!//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-                  D_M_A_i_.resize(D_M_A_i_.rows()+6, Eigen::NoChange);                     ///      63.0 seg
-                  D_Mat6ProjRz(P_zero[ID], nS, TransConst[ID].derived(), Rot[ID].derived(), D_M_A_i_);
-//!------------------------------------------------------------------------------!//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
                   //! Prepare inertial expression differentiation D_q_Pa.
                   //!------------------------------------------------------------------------------!//              73.8 seg
                   D_SpatialVector D_Vec, D_VecII;
@@ -618,12 +618,6 @@ namespace geo {
                   //!------------------------------------------------------------------------------!//     83.61 seg
                   //!                         INERTIAL BACK PROJECTION                             !//
                   //!------------------------------------------------------------------------------!//
-                  //! Back projection of M_a.
-                  //!------------------------------------------------------------------------------!//
-//!------------------------------------------------------------------------------!//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-                  Mat6ProjRz(P_zero[ID], TransConst[ID].derived(), Rot[ID].derived(), M_a[ID], Mtmp);
-                  M_A[IDj].noalias() += Mtmp;
-//!------------------------------------------------------------------------------!//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
                   //! Back projection of P_a.
                   //!------------------------------------------------------------------------------!//    83.99
@@ -644,30 +638,22 @@ namespace geo {
 
                   P_A[IDj].noalias() += P_A_i;
 
-//!------------------------------------------------------------------------------!//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-                  //! Back projection of the partial derivative D_M_a.
-                  //! M_a differentiation -> Single-motion-revolute screws enable skew-symmetric properties.
+                  //! Make room for new D_M_i
                   //!------------------------------------------------------------------------------!//
-                  SpatialMatrix M_a_S, M_a_S_;
-                  M_a_S.setZero();
-                  M_a_S.template row(0) = -M_a[ID].template row(1);  // mimicking effect ad_dual(-Sz)*Ma
-                  M_a_S.template row(1) =  M_a[ID].template row(0);
-                  M_a_S.template row(3) = -M_a[ID].template row(4);
-                  M_a_S.template row(4) =  M_a[ID].template row(3);
+                  D_M_A_i_.resize(D_M_A_i_.rows()+6, Eigen::NoChange);
 
-                  M_a_S_.noalias() = M_a_S + M_a_S.transpose();   // mimicking effect ad_dual(-Sz)*Ma - Ma*ad(Sz)
+                  //! Call CRTP visitor.
+                  //!------------------------------------------------------------------------------!//
+                  visitorInertia03.P_z_ = P_zero[ID];  visitorInertia03.nS_ = nS;         visitorInertia03.P_ = &TransConst[ID];
+                  visitorInertia03.R_ = &Rot[ID];      visitorInertia03.P_a_ = &P_a[ID];  visitorInertia03.P_A_i_ = &P_A_i;
+                  visitorInertia03.M_a_ = &M_a[ID];    visitorInertia03.Mtmp_ = &Mtmp;    visitorInertia03.D_M_A_i_ = &D_M_A_i_;
+                  boost::apply_visitor( visitorInertia03, *JointTypesIter );
 
-                  //! Transform M_a_S_ since it is now symmetric.
-                  Mat6ProjRz(P_zero[ID], TransConst[ID].derived(), Rot[ID].derived(), M_a_S_, Mtmp);
-//!------------------------------------------------------------------------------!//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                  M_A[IDj].noalias() += Mtmp;
+
                   //!------------------------------------------------------------------------------!//
                   //!                                  BRANCHING                                   !//
                   //!------------------------------------------------------------------------------!//
-//!------------------------------------------------------------------------------!//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-                  P_A_i << -P_a[ID].coeff(1), P_a[ID].coeff(0), 0, -P_a[ID].coeff(4), P_a[ID].coeff(3), 0;
-//!------------------------------------------------------------------------------!//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-                  D_M_A_i_.template topRows<6>() = Mtmp;
-
                   if (nChild == 1) {  //! Serial Body
                       //!-------------------------------------------------------------------------  D_MA
                       //            D_M_A_i_.template topRows<6>() = Mtmp;
@@ -703,59 +689,73 @@ namespace geo {
 
                 }
 
-
-
-
-
-
-
-
-              //              InertialVis.indexVec = &indexVec[ID];
-              //              InertialVis.u = &u[ID];   InertialVis.iD = &invD[ID];   InertialVis.tau = tau(ID);
-              //              InertialVis.S = &Screw_w[ID];  InertialVis.U_ = &U[ID];  InertialVis.c_ = &Cbias[ID];
-              //              InertialVis.P_A_ = &P_A[ID];  InertialVis.M_A_ = &M_A[ID];
-              //              InertialVis.P_a_ = &P_a[ID];  InertialVis.M_a_ = &M_a[ID];
-              //              InertialVis.P_ = &TransConst[ID];  InertialVis.R_ = &Rot[ID];  InertialVis.P_z = P_zero[ID];
-              //              InertialVis.P_Aj_ = &P_A[IDj];  InertialVis.M_Aj_ = &M_A[IDj];
-              //              //!-------------------------------------------------------
-              //              InertialVis.rootFlag = rootFlag[ID];
-              //              InertialVis.D_U_h_ = &D_U_h[ID];    InertialVis.D_U_v_ = &D_U_v[ID];
-              //              InertialVis.D_invD_ = &D_invD[ID];  InertialVis.D_M_A_ = &D_M_A[ID];    InertialVis.D_M_Aj_ = &D_M_A[IDj];
-              //              //!-------------------------------------------------------
-              //              InertialVis.D_q_u_ = &D_q_u[ID];      InertialVis.D_dq_u_ = &D_dq_u[ID];
-              //              InertialVis.D_q_Pa_ = &D_q_Pa[ID];    InertialVis.D_dq_Pa_ = &D_dq_Pa[ID];
-              //              InertialVis.D_q_PA_ = &D_q_PA[ID];    InertialVis.D_dq_PA_ = &D_dq_PA[ID];
-              //              InertialVis.D_q_PAj_ = &D_q_PA[IDj];  InertialVis.D_dq_PAj_ = &D_dq_PA[IDj];
-              //              InertialVis.D_q_c_ = &D_q_c[ID];      InertialVis.D_dq_c_ = &D_dq_c[ID];
-              //              //!-------------------------------------------------------
-              //              boost::apply_visitor( InertialVis, *JointTypesIter );
-
-
-
-
-
-
-
-
-
-
             } else {
-//              InerLeafVis.u = &u[ID];   InerLeafVis.iD = &invD[ID];    InerLeafVis.tau = tau(ID);
-//              InerLeafVis.S = &Screw_w[ID];  InerLeafVis.U_ = &U[ID];  InerLeafVis.c_ = &Cbias[ID];
-//              InerLeafVis.P_A_ = &P_A[ID];  InerLeafVis.M_A_ = &M_A[ID];
-//              InerLeafVis.P_a_ = &P_a[ID];  InerLeafVis.M_a_ = &M_a[ID];
-//              InerLeafVis.P_ = &TransConst[ID];  InerLeafVis.R_ = &Rot[ID];  InerLeafVis.P_z = P_zero[ID];
-//              InerLeafVis.P_Aj_ = &P_A[IDj];  InerLeafVis.M_Aj_ = &M_A[IDj];
-//              //!-------------------------------------------------------
-//              InerLeafVis.D_M_Aj_ = &D_M_A[IDj];
-//              InerLeafVis.D_q_u_ = &D_q_u[ID];      InerLeafVis.D_dq_u_ = &D_dq_u[ID];
-//              InerLeafVis.D_q_p_ = &D_q_p[ID];      InerLeafVis.D_dq_p_ = &D_dq_p[ID];
-//              InerLeafVis.D_q_Pa_ = &D_q_Pa[ID];    InerLeafVis.D_dq_Pa_ = &D_dq_Pa[ID];
-//              InerLeafVis.D_q_PA_ = &D_q_PA[ID];    InerLeafVis.D_dq_PA_ = &D_dq_PA[ID];
-//              InerLeafVis.D_q_PAj_ = &D_q_PA[IDj];  InerLeafVis.D_dq_PAj_ = &D_dq_PA[IDj];
-//              InerLeafVis.D_q_c_ = &D_q_c[ID];      InerLeafVis.D_dq_c_ = &D_dq_c[ID];
-//              //!-------------------------------------------------------
-//              boost::apply_visitor( InerLeafVis, *JointTypesIter );
+
+              u[ID] = tau(ID);
+
+              //! Call CRTP visitor.
+              //!------------------------------------------------------------------------------!//
+              visitorLeaf01.invD_ = &invD[ID];      visitorLeaf01.u_ = &u[ID];            visitorLeaf01.U_ = &U[ID];
+              visitorLeaf01.P_A_ = &P_A[ID];        visitorLeaf01.M_A_ = &M_A[ID];        visitorLeaf01.D_q_u_ = &D_q_u[ID];
+              visitorLeaf01.D_dq_u_ = &D_dq_u[ID];  visitorLeaf01.D_q_PA_ = &D_q_PA[ID];  visitorLeaf01.D_dq_PA_ = &D_dq_PA[ID];
+              boost::apply_visitor( visitorLeaf01, *JointTypesIter );
+
+              //! Prepare inertial expressions.
+              //!------------------------------------------------------------------------------!//
+              //! Ma
+              SpatialVector UD_ = U[ID]*invD[ID];
+              M_a[ID].noalias() = M_A[ID] - UD_*U[ID].transpose();
+              
+              //! Pa
+              P_a[ID].noalias() = P_A[ID] + M_a[ID]*Cbias[ID] + u[ID]*UD_;
+
+              //! Ad*Xi*
+              typedef Eigen::Block<SpatialVector,3,1> Segment3;
+              
+              Segment3 Pa_up = P_a[ID].template segment<3>(0);
+              Segment3 Pa_dw = P_a[ID].template segment<3>(3);
+              
+              typename SpatialVector::PlainObject P_A_i;
+              
+              Segment3 Up_   = P_A_i.template segment<3>(0);
+              Segment3 Down_ = P_A_i.template segment<3>(3);
+              
+              Up_.noalias()   = Rot[ID]*Pa_up;
+              Down_.noalias() = Rot[ID]*Pa_dw;
+              
+              if(P_zero[ID]) Down_.noalias() += TransConst[ID].cross(Up_);  // If P != 0
+              
+              P_A[IDj].noalias() += P_A_i;
+
+              //! Call CRTP visitor.
+              //!------------------------------------------------------------------------------!//
+              visitorLeaf02.P_z_ = P_zero[ID];  visitorLeaf02.P_ = &TransConst[ID];  visitorLeaf02.R_ = &Rot[ID];  visitorLeaf02.P_A_i_ = &P_A_i;
+              visitorLeaf02.P_a_ = &P_a[ID];    visitorLeaf02.M_a_ = &M_a[ID];  visitorLeaf02.M_A_j_ = &M_A[IDj];  visitorLeaf02.D_M_A_j_ = &D_M_A[IDj];
+              boost::apply_visitor( visitorLeaf02, *JointTypesIter );
+
+//              typename GEOMBD_EIGEN_PLAIN_TYPE(SpatialMatrix) AdjointDual;
+              SpatialMatrix AdjointDual;
+
+              //! P_a differentiation -> D_q_Pa and D_dq_Pa.
+              //!------------------------------------------------------------------------------!//
+              D_q_Pa[ID] = D_q_p[ID];
+              D_q_Pa[ID].noalias() += M_a[ID]*D_q_c[ID];
+              D_q_Pa[ID].noalias() += UD_*D_q_u[ID];
+
+              D_dq_Pa[ID] = D_dq_p[ID];
+              D_dq_Pa[ID].noalias() += M_a[ID]*D_dq_c[ID];
+              D_dq_Pa[ID].noalias() += UD_*D_dq_u[ID];
+
+              //! D_q_Pa back projection.
+              //!------------------------------------------------------------------------------!//
+              AdDual(TransConst[ID].derived(), Rot[ID].derived(), AdjointDual);
+              D_q_PA[IDj].template rightCols<1>() = AdjointDual*P_A_i;
+              D_q_PA[IDj].noalias() += AdjointDual*D_q_Pa[ID];
+              
+              //! D_dq_Pa back projection.
+              //!------------------------------------------------------------------------------!//
+              D_dq_PA[IDj].noalias() += AdjointDual*D_dq_Pa[ID];
+
             }
           ID--;
         }

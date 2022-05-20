@@ -115,6 +115,58 @@ namespace geo {
     }
 
 
+    //! Recurring Pattern for the Inertial Terms 03.
+    template<typename IndexType, typename Vector3Type, typename Matrix3Type, typename Vector6Type, typename Matrix6Type, typename D_Matrix6Type>
+    EIGEN_ALWAYS_INLINE void
+    Inertia03(bool P_z_,
+              IndexType nS_,
+              typename Eigen::MatrixBase<Vector3Type> & P_,
+              typename Eigen::MatrixBase<Matrix3Type> & R_,
+              typename Eigen::MatrixBase<Vector6Type> & P_a_,
+              typename Eigen::MatrixBase<Vector6Type> & P_A_i_,
+              typename Eigen::MatrixBase<Matrix6Type> & M_a_,
+              typename Eigen::MatrixBase<Matrix6Type> & Mtmp_,
+              typename Eigen::MatrixBase<D_Matrix6Type> & D_M_A_i_) {
+      static_cast<Derived*>(this)->runInertia03(P_z_, nS_, P_.derived(), R_.derived(), P_a_.derived(), P_A_i_.derived(),
+                                                M_a_.derived(), Mtmp_.derived(), D_M_A_i_.derived());
+    }
+
+
+    //! Recurring Pattern for the Leaf body 01.
+    template<typename ScalarType, typename Vector6Type, typename Matrix6Type, typename RowVectorXType, typename D_Vector6Type>
+    EIGEN_ALWAYS_INLINE void
+    Leaf01(ScalarType & invD_,
+           ScalarType & u_,
+           typename Eigen::MatrixBase<Vector6Type> & U_,
+           typename Eigen::MatrixBase<Vector6Type> & P_A_,
+           typename Eigen::MatrixBase<Matrix6Type> & M_A_,
+           typename Eigen::MatrixBase<RowVectorXType> & D_q_u_,
+           typename Eigen::MatrixBase<RowVectorXType> & D_dq_u_,
+           typename Eigen::MatrixBase<D_Vector6Type> & D_q_PA_,
+           typename Eigen::MatrixBase<D_Vector6Type> & D_dq_PA_) {
+      static_cast<Derived*>(this)->runLeaf01(invD_, u_, U_.derived(), P_A_.derived(), M_A_.derived(),
+                                             D_q_u_.derived(), D_dq_u_.derived(), D_q_PA_.derived(), D_dq_PA_.derived());
+    }
+
+
+    //! Recurring Pattern for the Leaf body 02.
+    template<typename Vector3Type, typename Matrix3Type, typename Vector6Type, typename Matrix6Type, typename D_Matrix6Type>
+    EIGEN_ALWAYS_INLINE void
+    Leaf02(bool P_z_,
+           typename Eigen::MatrixBase<Vector3Type> & P_,
+           typename Eigen::MatrixBase<Matrix3Type> & R_,
+           typename Eigen::MatrixBase<Vector6Type> & P_A_i_,
+           typename Eigen::MatrixBase<Vector6Type> & P_a_,
+           typename Eigen::MatrixBase<Matrix6Type> & M_a_,
+           typename Eigen::MatrixBase<Matrix6Type> & M_A_j_,
+           typename Eigen::MatrixBase<D_Matrix6Type> & D_M_A_j_) {
+      static_cast<Derived*>(this)->runLeaf02(P_z_, P_.derived(), R_.derived(), P_A_i_.derived(), P_a_.derived(),
+                                                M_a_.derived(), M_A_j_.derived(), D_M_A_j_.derived());
+    }
+
+
+
+
 
 
 

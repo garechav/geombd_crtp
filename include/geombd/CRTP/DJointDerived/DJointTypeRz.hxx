@@ -178,6 +178,130 @@ namespace geo{
     }
 
 
+    //! Inertial Terms 03 Declaration.
+    //!------------------------------------------------------------------------------!//
+    template<typename IndexType, typename Vector3Type, typename Matrix3Type, typename Vector6Type, typename Matrix6Type, typename D_Matrix6Type>
+    inline static void
+    runInertia03(bool P_z_,
+                 IndexType nS_,
+                 typename Eigen::MatrixBase<Vector3Type> & P_,
+                 typename Eigen::MatrixBase<Matrix3Type> & R_,
+                 typename Eigen::MatrixBase<Vector6Type> & P_a_,
+                 typename Eigen::MatrixBase<Vector6Type> & P_A_i_,
+                 typename Eigen::MatrixBase<Matrix6Type> & M_a_,
+                 typename Eigen::MatrixBase<Matrix6Type> & Mtmp_,
+                 typename Eigen::MatrixBase<D_Matrix6Type> & D_M_A_i_) {
+
+      //! Back projection of M_a.
+      //!------------------------------------------------------------------------------!//
+      Mat6ProjRz(P_z_, P_.derived(), R_.derived(), M_a_.derived(), Mtmp_.derived());
+
+      //! Back projection of D_M_a.
+      //!------------------------------------------------------------------------------!//
+      D_Mat6ProjRz(P_z_, nS_, P_.derived(), R_.derived(), D_M_A_i_.derived());
+
+      //! Creation of D_M_a_i.
+      //! M_a differentiation -> Single-motion-revolute screws enable skew-symmetric properties.
+      //!------------------------------------------------------------------------------!//
+      Matrix6Type M_a_S, M_a_S_;
+      M_a_S.setZero();
+      M_a_S.template row(0) = -M_a_.template row(1);  // mimicking effect ad_dual(-Sz)*Ma
+      M_a_S.template row(1) =  M_a_.template row(0);
+      M_a_S.template row(3) = -M_a_.template row(4);
+      M_a_S.template row(4) =  M_a_.template row(3);
+
+      M_a_S_.noalias() = M_a_S + M_a_S.transpose();   // mimicking effect ad_dual(-Sz)*Ma - Ma*ad(Sz)
+
+      //! Transform M_a_S_ since it is now symmetric.
+      //! Back projection of the partial derivative D_M_a.
+      //!------------------------------------------------------------------------------!//
+      Mat6ProjRz(P_z_, P_.derived(), R_.derived(), M_a_S_.derived(), M_a_S.derived());
+
+      D_M_A_i_.template topRows<6>() = M_a_S;
+
+      P_A_i_ << -P_a_.coeff(1), P_a_.coeff(0), 0, -P_a_.coeff(4), P_a_.coeff(3), 0;
+
+    }
+
+
+    //! Leaf Terms 01 Declaration.
+    //!------------------------------------------------------------------------------!//
+    template<typename ScalarType, typename Vector6Type, typename Matrix6Type, typename RowVectorXType, typename D_Vector6Type>
+    inline static void
+    runLeaf01(ScalarType & invD_,
+              ScalarType & u_,
+              typename Eigen::MatrixBase<Vector6Type> & U_,
+              typename Eigen::MatrixBase<Vector6Type> & P_A_,
+              typename Eigen::MatrixBase<Matrix6Type> & M_A_,
+              typename Eigen::MatrixBase<RowVectorXType> & D_q_u_,
+              typename Eigen::MatrixBase<RowVectorXType> & D_dq_u_,
+              typename Eigen::MatrixBase<D_Vector6Type> & D_q_PA_,
+              typename Eigen::MatrixBase<D_Vector6Type> & D_dq_PA_) {
+
+      //! Solve U, inverse of D and u.
+      //!------------------------------------------------------------------------------!//
+      U_ = M_A_.template rightCols<1>();  invD_ = 1 / U_.coeff(5);  u_ -= P_A_.coeff(5);
+
+
+      //! Solve partial derivative of u as D_q_u and D_dq_u.
+      //!------------------------------------------------------------------------------!//
+      D_q_u_ = -D_q_PA_.template bottomRows<1>();  D_dq_u_ = -D_dq_PA_.template bottomRows<1>();
+
+    }
+
+
+    //! Leaf Terms 02 Declaration.
+    //!------------------------------------------------------------------------------!//
+    template<typename Vector3Type, typename Matrix3Type, typename Vector6Type, typename Matrix6Type, typename D_Matrix6Type>
+    inline static void
+    runLeaf02(bool P_z_,
+              typename Eigen::MatrixBase<Vector3Type> & P_,
+              typename Eigen::MatrixBase<Matrix3Type> & R_,
+              typename Eigen::MatrixBase<Vector6Type> & P_A_i_,
+              typename Eigen::MatrixBase<Vector6Type> & P_a_,
+              typename Eigen::MatrixBase<Matrix6Type> & M_a_,
+              typename Eigen::MatrixBase<Matrix6Type> & M_A_j_,
+              typename Eigen::MatrixBase<D_Matrix6Type> & D_M_A_j_) {
+
+      //! Inertial back projection.
+      //!------------------------------------------------------------------------------!//
+      //      typename GEOMBD_EIGEN_PLAIN_TYPE(Matrix6Type) Mtmp_;
+      Matrix6Type Mtmp_;
+
+      //! Back projection of M_a.
+      //!------------------------------------------------------------------------------!//
+      Mat6ProjRz(P_z_, P_.derived(), R_.derived(), M_a_.derived(), Mtmp_.derived());
+      M_A_j_ += Mtmp_;
+
+      //! Inertial back-projection differentiation.
+      //!------------------------------------------------------------------------------!//
+      //! M_a differentiation -> Single-motion-revolute screws enable skew-symmetric properties.
+      //!------------------------------------------------------------------------------!//
+      Matrix6Type M_a_S, M_a_S_;
+      M_a_S.setZero();
+      M_a_S.template row(0) = -M_a_.template row(1);  // mimicking effect ad_dual(-Sz)*Ma
+      M_a_S.template row(1) =  M_a_.template row(0);
+      M_a_S.template row(3) = -M_a_.template row(4);
+      M_a_S.template row(4) =  M_a_.template row(3);
+
+      M_a_S_.noalias() = M_a_S + M_a_S.transpose();   // mimicking effect ad_dual(-Sz)*Ma - Ma*ad(Sz)
+
+      //! Transform M_a_S_ since it is now symmetric.
+      //!------------------------------------------------------------------------------!//
+      Mat6ProjRz(P_z_, P_.derived(), R_.derived(), M_a_S_.derived(), M_a_S.derived()); /// this will return as MtmpTop
+
+      D_M_A_j_ = M_a_S;
+
+      P_A_i_ << -P_a_.coeff(1), P_a_.coeff(0), 0, -P_a_.coeff(4), P_a_.coeff(3), 0;
+
+    }
+
+
+
+
+
+
+
   };
 
 } // end namespace geo
