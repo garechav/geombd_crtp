@@ -268,15 +268,9 @@ namespace geo {
     Leaf01_visitor<ScalarType, SpatialVector, SpatialMatrix, RowVectorXr, D_SpatialVector> visitorLeaf01;
     Leaf02_visitor<Vector3r, Matrix3r, SpatialVector, SpatialMatrix, D_SpatialMatrix> visitorLeaf02;
 
-
-    //    D_TCP_root_visitor<ScalarType, Vector3r, SpatialVector, SpatialMatrix, D_SpatialVector> TCP_rootVis;
-    //    D_TwCbPb_visitor<ScalarType, Matrix3r, SpatialMatrix, Vector3r, SpatialVector, D_SpatialVector> TwCbPbVis;
-
-    //    D_InertiaLeaf_visitor<ScalarType, Vector3r, Matrix3r, SpatialVector, SpatialMatrix, RowVectorXr, D_SpatialVector, D_SpatialMatrix> InerLeafVis;
-    //    D_Inertial_visitor<ScalarType, Vector6int, Vector3r, Matrix3r, SpatialVector, SpatialMatrix, VectorXr, RowVectorXr, D_SpatialVector, D_SpatialMatrix> InertialVis;
-
-    //    D_Accel_root_visitor<ScalarType, Vector3r, Matrix3r, SpatialVector, D_SpatialVector, RowVectorXr, MatrixXr> Accel_rootVis;
-    //    D_Accel_visitor<ScalarType, index_t, Vector3r, Matrix3r, SpatialVector, D_SpatialVector, RowVectorXr, MatrixXr, VectorXint> AccelVis;
+    Accel01_visitor<SpatialVector> visitorAccel01;
+    Accel02_visitor<ScalarType, SpatialVector, RowVectorXr, D_SpatialVector> visitorAccel02;
+    AccelRoot_visitor<ScalarType, Vector3r, Matrix3r, SpatialVector, D_SpatialVector, RowVectorXr, MatrixXr> visitorRoot;
 
 
     PINOCCHIO_ALIGNED_STD_VECTOR( Vector3r ) Trans;
@@ -562,7 +556,7 @@ namespace geo {
               boost::apply_visitor( visitorInertia02, *JointTypesIter );
 
 
-              //! Differentiating inertial back-projection to parent. Only if parent is not the root.           54 seg
+              //! Differentiating inertial back-projection to parent. Only if parent is not the root.
               //!------------------------------------------------------------------------------!//
               if (rootFlag[ID]) {
 
@@ -579,7 +573,7 @@ namespace geo {
                   P_a[ID].noalias() += u[ID]*UD_;
 
                   //! Prepare inertial expression differentiation D_M_a.
-                  //!------------------------------------------------------------------------------!//           53.9 seg
+                  //!------------------------------------------------------------------------------!//
                   SpatialMatrix Mtmp, AdjointDual;  VectorXr kronAux;  D_SpatialMatrix D_MtmpI;
 
                   //!------------------------------------------------------------------------------!//
@@ -592,35 +586,35 @@ namespace geo {
                   for(index_t iter = 0; iter < nS*6; iter += 6){
                       D_M_A_i_.middleRows(iter, 6).noalias() -= D_MtmpI.middleRows(iter, 6).transpose() + D_invD[ID].coeffRef(ite)*Mtmp;
                       ite++;
-                    }                                                                               ///            62.3 seg
+                    }
 
                   kronAux.noalias() = D_M_A_i_*Cbias[ID];
 
                   //! then D_MtmpII = D_M_a and D_MtmpI is AdjointDual*D_M_a*Adjoint
 
                   //! Prepare inertial expression differentiation D_q_Pa.
-                  //!------------------------------------------------------------------------------!//              73.8 seg
+                  //!------------------------------------------------------------------------------!//
                   D_SpatialVector D_Vec, D_VecII;
                   D_Vec = Eigen::Map<D_SpatialVector>(kronAux.data(),6,nS);
 
-                  D_Vec.noalias() += (u[ID]*invD[ID])*D_U_h[ID] + (u[ID]*U[ID])*D_invD[ID];   //75.41
+                  D_Vec.noalias() += (u[ID]*invD[ID])*D_U_h[ID] + (u[ID]*U[ID])*D_invD[ID];
 
                   D_q_Pa[ID].leftCols(nP).noalias() = M_a[ID]*D_q_c[ID];
-                  D_q_Pa[ID].rightCols(nS) = D_Vec;           // 79.05
+                  D_q_Pa[ID].rightCols(nS) = D_Vec;
 
-                  D_q_Pa[ID].noalias() += D_q_PA[ID] + UD_*D_q_u[ID];  //  78.46
+                  D_q_Pa[ID].noalias() += D_q_PA[ID] + UD_*D_q_u[ID];
 
                   //! Prepare inertial expression differentiation D_dq_Pa.
                   //!------------------------------------------------------------------------------!//
                   D_dq_Pa[ID].noalias() = D_dq_PA[ID] + UD_*D_dq_u[ID];
                   D_dq_Pa[ID].leftCols(nP).noalias() += M_a[ID]*D_dq_c[ID];
 
-                  //!------------------------------------------------------------------------------!//     83.61 seg
+                  //!------------------------------------------------------------------------------!//
                   //!                         INERTIAL BACK PROJECTION                             !//
                   //!------------------------------------------------------------------------------!//
 
                   //! Back projection of P_a.
-                  //!------------------------------------------------------------------------------!//    83.99
+                  //!------------------------------------------------------------------------------!//
                   typedef Eigen::Block<SpatialVector,3,1> Segment3;
 
                   Segment3 Pa_up   = P_a[ID].template segment<3>(0);
@@ -733,7 +727,7 @@ namespace geo {
               visitorLeaf02.P_a_ = &P_a[ID];    visitorLeaf02.M_a_ = &M_a[ID];  visitorLeaf02.M_A_j_ = &M_A[IDj];  visitorLeaf02.D_M_A_j_ = &D_M_A[IDj];
               boost::apply_visitor( visitorLeaf02, *JointTypesIter );
 
-//              typename GEOMBD_EIGEN_PLAIN_TYPE(SpatialMatrix) AdjointDual;
+              //              typename GEOMBD_EIGEN_PLAIN_TYPE(SpatialMatrix) AdjointDual;
               SpatialMatrix AdjointDual;
 
               //! P_a differentiation -> D_q_Pa and D_dq_Pa.
@@ -760,53 +754,115 @@ namespace geo {
           ID--;
         }
 
+      visitorRoot.D_ddq_ = &D_ddq;
+
+      //! Third Recursion
+      ID = 0;
+      for ( JointTypesIter = JointTypesVec.begin(); JointTypesIter != JointTypesVec.end(); JointTypesIter++ ){
+          //! Spatial acceleration
+          IDj = parent[ID];
+          if( ID ){
+
+              //! Acceleration bias and its derivative.
+              //!------------------------------------------------------------------------------!//
+              typedef const Eigen::Block<SpatialVector,3,1> constSegment3;
+              typedef Eigen::Block<SpatialVector,3,1> Segment3;
+
+              constSegment3 & AjUp = Accel[IDj].template segment<3>(0);
+              constSegment3 & AjDown = Accel[IDj].template segment<3>(3);
+
+              typename SpatialVector::PlainObject Aa_, AdAj;
+
+              Segment3 AaUp = Aa_.template segment<3>(0);
+              Segment3 AaDown = Aa_.template segment<3>(3);
+
+              if(P_zero[ID]) {
+                  //! delete cross product
+                  AaDown.noalias() = AjUp - TransConst[ID].cross(AjDown);  //tmp
+                  AaUp.noalias()   = Rot[ID].transpose()*AaDown;
+                } else {
+                  AaUp.noalias()   = Rot[ID].transpose()*AjUp;
+                }
+
+              AaDown.noalias() = Rot[ID].transpose()*AjDown;
+
+              //! Call CRTP visitor.
+              //!------------------------------------------------------------------------------!//
+              visitorAccel01.AdAj_ = &AdAj;  visitorAccel01.Aa_ = &Aa_;
+              boost::apply_visitor( visitorAccel01, *JointTypesIter );
+
+              Aa_.noalias() += Cbias[ID];
+              //!------------------------------------------------------------------------------!//
+              Eigen::Matrix<ScalarType, 6, 6> AdjointDual;
+              AdDual(TransConst[ID].derived(), Rot[ID].derived(), AdjointDual);
+              typename D_SpatialVector::PlainObject D_q_Aa_, D_dq_Aa_;
+
+              D_q_Aa_.noalias() = AdjointDual.transpose()*D_q_A[IDj];
+              D_q_c[ID].template rightCols<1>() += AdAj;
+
+              for(int j=0; j < PRE_n[ID].size(); j++)
+                D_q_Aa_.col( PRE_n[ID](j) ) += D_q_c[ID].col(j);
+
+              D_dq_Aa_.noalias() = AdjointDual.transpose()*D_dq_A[IDj];
+
+              for(int j=0; j < PRE_n[ID].size(); j++)
+                D_dq_Aa_.col( PRE_n[ID](j) ) += D_dq_c[ID].col(j);
 
 
+              //! Joint acceleration and its derivatives D_q_ddq and D_dq_ddq.
+              //!------------------------------------------------------------------------------!//
+              ScalarType ddq__, ddq_;
+              ddq__ = u[ID] - U[ID].transpose()*Aa_;  ddq_ = invD[ID]*ddq__;
+              ddq(ID) = ddq_;
+              //!-------------------------------------------------------
+              typename RowVectorXr::PlainObject D_q_ddq, D_dq_ddq;
+              D_q_ddq = -invD[ID]*U[ID].transpose()*D_q_Aa_;
+
+              for(int j=0; j < PRESUC_n[ID].size(); j++)
+                D_q_ddq( PRESUC_n[ID](j) ) += invD[ID]*D_q_u[ID](j);
+
+              D_dq_ddq = -invD[ID]*U[ID].transpose()*D_dq_Aa_;
+
+              for(int j=0; j < PRESUC_n[ID].size(); j++)
+                D_dq_ddq( PRESUC_n[ID](j) ) += invD[ID]*D_dq_u[ID](j);
 
 
+              //! Special treatment when body is not a leaf.
+              //!------------------------------------------------------------------------------!//
+              if (isLeaf[ID]) {
 
+                  for(int j=0; j < SUC_n[ID].size(); j++)
+                    D_q_ddq( SUC_n[ID](j) ) += ddq__*D_invD[ID](j) - invD[ID]*Aa_.transpose()*D_U_h[ID].col(j);
 
+                  Accel[ID] = Aa_;  D_q_A[ID] = D_q_Aa_;  D_dq_A[ID] = D_dq_Aa_;
 
+                  //! Call CRTP visitor.
+                  //!------------------------------------------------------------------------------!//
+                  visitorAccel02.ddq_ = &ddq_;  visitorAccel02.A_ = &Accel[ID];  visitorAccel02.D_q_A_ = &D_q_A[ID];
+                  visitorAccel02.D_dq_A_ = &D_dq_A[ID];  visitorAccel02.D_q_ddq_ = &D_q_ddq;  visitorAccel02.D_dq_ddq_ = &D_dq_ddq;
+                  boost::apply_visitor( visitorAccel02, *JointTypesIter );
 
+                }
 
+              //! Fill up D_ddq.
+              //!------------------------------------------------------------------------------!//
+              D_ddq.row(ID) << D_q_ddq, D_dq_ddq;
 
+            } else {
 
+              visitorRoot.u = u[ID];         visitorRoot.iD = invD[ID];         visitorRoot.ddq = &ddq[ID];
+              visitorRoot.S = &Screw_w[ID];  visitorRoot.P_ = &TransConst[ID];  visitorRoot.R_ = &Rot[ID];
+              visitorRoot.U_ = &U[ID];       visitorRoot.Acc_i_ = &Accel[ID];
+              //!-------------------------------------------------------
+              visitorRoot.D_U_h_ = &D_U_h[ID];  visitorRoot.D_invD_ = &D_invD[ID];
+              visitorRoot.D_q_u_ = &D_q_u[ID];  visitorRoot.D_dq_u_ = &D_dq_u[ID];
+              visitorRoot.D_q_A_ = &D_q_A[ID];  visitorRoot.D_dq_A_ = &D_dq_A[ID];
 
-      //      AccelVis.D_ddq_ = &D_ddq;  Accel_rootVis.D_ddq_ = &D_ddq;
+              boost::apply_visitor( visitorRoot, *JointTypesIter );
 
-      //      //! Third Recursion
-      //      ID = 0;
-      //      for ( JointTypesIter = JointTypesVec.begin(); JointTypesIter != JointTypesVec.end(); JointTypesIter++ ){
-      //          //! Spatial acceleration
-      //          IDj = parent[ID];
-      //          if( ID ){
-      //              AccelVis.zeroFlag = P_zero[ID];  AccelVis.u = u[ID];  AccelVis.iD = invD[ID];
-      //              AccelVis.ddq = &ddq[ID];   AccelVis.S = &Screw_w[ID];  AccelVis.P_ = &TransConst[ID];
-      //              AccelVis.R_ = &Rot[ID];    AccelVis.c_ = &Cbias[ID];   AccelVis.U_ = &U[ID];
-      //              AccelVis.Acc_i_ = &Accel[ID];  AccelVis.Acc_j_ = &Accel[ IDj ];
-      //              //!-------------------------------------------------------
-      //              AccelVis.isLeaf = isLeaf[ID];  AccelVis.ID = ID;
-      //              AccelVis.Pre_ = &PRE_n[ID];  AccelVis.Suc_ = &SUC_n[ID];  AccelVis.PreSuc_ = &PRESUC_n[ID];
-      //              AccelVis.D_U_h_ = &D_U_h[ID];    AccelVis.D_invD_ = &D_invD[ID];
-      //              AccelVis.D_q_u_ = &D_q_u[ID];    AccelVis.D_dq_u_ = &D_dq_u[ID];
-      //              AccelVis.D_q_c_ = &D_q_c[ID];    AccelVis.D_dq_c_ = &D_dq_c[ID];
-      //              AccelVis.D_q_A_ = &D_q_A[ID];    AccelVis.D_dq_A_ = &D_dq_A[ID];
-      //              AccelVis.D_q_Aj_ = &D_q_A[IDj];  AccelVis.D_dq_Aj_ = &D_dq_A[IDj];
-
-      //              boost::apply_visitor( AccelVis, *JointTypesIter );
-      //            } else {
-      //              Accel_rootVis.u = u[ID];  Accel_rootVis.iD = invD[ID];  Accel_rootVis.ddq = &ddq[ID];
-      //              Accel_rootVis.S = &Screw_w[ID];  Accel_rootVis.P_ = &TransConst[ID];  Accel_rootVis.R_ = &Rot[ID];
-      //              Accel_rootVis.U_ = &U[ID];  Accel_rootVis.Acc_i_ = &Accel[ID];
-      //              //!-------------------------------------------------------
-      //              Accel_rootVis.D_U_h_ = &D_U_h[ID];  Accel_rootVis.D_invD_ = &D_invD[ID];
-      //              Accel_rootVis.D_q_u_ = &D_q_u[ID];  Accel_rootVis.D_dq_u_ = &D_dq_u[ID];
-      //              Accel_rootVis.D_q_A_ = &D_q_A[ID];  Accel_rootVis.D_dq_A_ = &D_dq_A[ID];
-
-      //              boost::apply_visitor( Accel_rootVis, *JointTypesIter );
-      //            }
-      //          ID++;
-      //        }
+            }
+          ID++;
+        }
 
       //! --> Alternative FOREACH
       // BOOST_FOREACH(CV & c, JointTypesVec)

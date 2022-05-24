@@ -15,9 +15,9 @@
 #include "geombd/CRTP/utils/sincos.hxx"
 #include "geombd/CRTP/utils/functors.hxx"
 
-//#include "DJointTypeRx.hxx"
-//#include "DJointTypeRy.hxx"
+#include "DJointTypeRx.hxx"
+#include "DJointTypeRy.hxx"
 #include "DJointTypeRz.hxx"
-//#include "DJointTypeRxyz.hxx"
+#include "DJointTypeRxyz.hxx"
 
 #endif // GEOMBD_DIFFERENTIATED_JOINT_DERIVED_H

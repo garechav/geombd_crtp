@@ -1,10 +1,10 @@
 /**
- *    \file include/geombd/CRTP/DJointDerived/DJointTypeRz.hxx
+ *    \file include/geombd/CRTP/DJointDerived/DJointTypeRxyz.hxx
  *    \author Alvaro Paz, Gustavo Arechavaleta
  *    \version 1.0
  *    \date 2021
  *
- *    Derived class for Rz joint type
+ *    Derived class for Rxyz joint type
  *    Copyright (c) 2021 Cinvestav
  *    This library is distributed under the MIT License.
  */
@@ -41,8 +41,8 @@ namespace geo{
     template<typename ScalarType, typename Vector3Type, typename Matrix3Type>
     inline static void
     runD_FK(const ScalarType & qi,
-                           const Eigen::MatrixBase<Vector3Type> & S,
-                           typename Eigen::MatrixBase<Matrix3Type> & R) {
+            const Eigen::MatrixBase<Vector3Type> & S,
+            typename Eigen::MatrixBase<Matrix3Type> & R) {
       static ScalarType sqi, cqi;
       SINCOS<ScalarType>(qi, &sqi, &cqi);
 
@@ -56,8 +56,8 @@ namespace geo{
     template<typename ScalarType, typename Vector6Type>
     inline static void
     runD_TCP01(const ScalarType & vi,
-                              typename Eigen::MatrixBase<Vector6Type> & S_,
-                              typename Eigen::MatrixBase<Vector6Type> & C_) {
+               typename Eigen::MatrixBase<Vector6Type> & S_,
+               typename Eigen::MatrixBase<Vector6Type> & C_) {
       //!------------------------------------------------------------------------------!//
       typedef Eigen::Block<Vector6Type,3,1> Segment3;
 
@@ -215,7 +215,7 @@ namespace geo{
       //! Transform M_a_S_ since it is now symmetric.
       //! Back projection of the partial derivative D_M_a.
       //!------------------------------------------------------------------------------!//
-      Mat6ProjRz(P_z_, P_.derived(), R_.derived(), M_a_S_.derived(), M_a_S.derived()); /// this will return as MtmpTop
+      Mat6ProjRz(P_z_, P_.derived(), R_.derived(), M_a_S_.derived(), M_a_S.derived());
 
       D_M_A_i_.template topRows<6>() = M_a_S;
 
@@ -223,6 +223,169 @@ namespace geo{
 
     }
 
+
+    //! Leaf Terms 01 Declaration.
+    //!------------------------------------------------------------------------------!//
+    template<typename ScalarType, typename Vector6Type, typename Matrix6Type, typename RowVectorXType, typename D_Vector6Type>
+    inline static void
+    runLeaf01(ScalarType & invD_,
+              ScalarType & u_,
+              typename Eigen::MatrixBase<Vector6Type> & U_,
+              typename Eigen::MatrixBase<Vector6Type> & P_A_,
+              typename Eigen::MatrixBase<Matrix6Type> & M_A_,
+              typename Eigen::MatrixBase<RowVectorXType> & D_q_u_,
+              typename Eigen::MatrixBase<RowVectorXType> & D_dq_u_,
+              typename Eigen::MatrixBase<D_Vector6Type> & D_q_PA_,
+              typename Eigen::MatrixBase<D_Vector6Type> & D_dq_PA_) {
+
+      //! Solve U, inverse of D and u.
+      //!------------------------------------------------------------------------------!//
+      U_ = M_A_.template rightCols<1>();  invD_ = 1 / U_.coeff(5);  u_ -= P_A_.coeff(5);
+
+
+      //! Solve partial derivative of u as D_q_u and D_dq_u.
+      //!------------------------------------------------------------------------------!//
+      D_q_u_ = -D_q_PA_.template bottomRows<1>();  D_dq_u_ = -D_dq_PA_.template bottomRows<1>();
+
+    }
+
+
+    //! Leaf Terms 02 Declaration.
+    //!------------------------------------------------------------------------------!//
+    template<typename Vector3Type, typename Matrix3Type, typename Vector6Type, typename Matrix6Type, typename D_Matrix6Type>
+    inline static void
+    runLeaf02(bool P_z_,
+              typename Eigen::MatrixBase<Vector3Type> & P_,
+              typename Eigen::MatrixBase<Matrix3Type> & R_,
+              typename Eigen::MatrixBase<Vector6Type> & P_A_i_,
+              typename Eigen::MatrixBase<Vector6Type> & P_a_,
+              typename Eigen::MatrixBase<Matrix6Type> & M_a_,
+              typename Eigen::MatrixBase<Matrix6Type> & M_A_j_,
+              typename Eigen::MatrixBase<D_Matrix6Type> & D_M_A_j_) {
+
+      //! Inertial back projection.
+      //!------------------------------------------------------------------------------!//
+      //      typename GEOMBD_EIGEN_PLAIN_TYPE(Matrix6Type) Mtmp_;
+      Matrix6Type Mtmp_;
+
+      //! Back projection of M_a.
+      //!------------------------------------------------------------------------------!//
+      Mat6ProjRz(P_z_, P_.derived(), R_.derived(), M_a_.derived(), Mtmp_.derived());
+      M_A_j_ += Mtmp_;
+
+      //! Inertial back-projection differentiation.
+      //!------------------------------------------------------------------------------!//
+      //! M_a differentiation -> Single-motion-revolute screws enable skew-symmetric properties.
+      //!------------------------------------------------------------------------------!//
+      Matrix6Type M_a_S, M_a_S_;
+      M_a_S.setZero();
+      M_a_S.template row(0) = -M_a_.template row(1);  // mimicking effect ad_dual(-Sz)*Ma
+      M_a_S.template row(1) =  M_a_.template row(0);
+      M_a_S.template row(3) = -M_a_.template row(4);
+      M_a_S.template row(4) =  M_a_.template row(3);
+
+      M_a_S_.noalias() = M_a_S + M_a_S.transpose();   // mimicking effect ad_dual(-Sz)*Ma - Ma*ad(Sz)
+
+      //! Transform M_a_S_ since it is now symmetric.
+      //!------------------------------------------------------------------------------!//
+      Mat6ProjRz(P_z_, P_.derived(), R_.derived(), M_a_S_.derived(), M_a_S.derived()); /// this will return as MtmpTop
+
+      D_M_A_j_ = M_a_S;
+
+      P_A_i_ << -P_a_.coeff(1), P_a_.coeff(0), 0, -P_a_.coeff(4), P_a_.coeff(3), 0;
+
+    }
+
+
+    //! Spatial Acceleration 01 Declaration.
+    //!------------------------------------------------------------------------------!//
+    template<typename Vector6Type>
+    inline static void
+    runAccel01(typename Eigen::MatrixBase<Vector6Type> & AdAj_,
+               typename Eigen::MatrixBase<Vector6Type> & Aa_) {
+
+      //! Mimicking effect -ad(Sz)*Ad*Aj
+      //!------------------------------------------------------------------------------!//
+      AdAj_ << Aa_.coeff(1), -Aa_.coeff(0), 0, Aa_.coeff(4), -Aa_.coeff(3), 0;
+
+    }
+
+
+    //! Spatial Acceleration 02 Declaration.
+    //!------------------------------------------------------------------------------!//
+    template<typename ScalarType, typename Vector6Type, typename RowVectorXType, typename D_Vector6Type>
+    inline static void
+    runAccel02(ScalarType* ddq_,
+               Eigen::MatrixBase<Vector6Type> & A_,
+               Eigen::MatrixBase<D_Vector6Type> & D_q_A_,
+               Eigen::MatrixBase<D_Vector6Type> & D_dq_A_,
+               Eigen::MatrixBase<RowVectorXType> & D_q_ddq_,
+               Eigen::MatrixBase<RowVectorXType> & D_dq_ddq_) {
+
+      //! Update spatial acceleration and its derivatives D_q_A_ and D_dq_A_.
+      //!------------------------------------------------------------------------------!//
+      A_.coeffRef(5) += (*ddq_);
+      //!------------------------------------------------------------------------------!//
+      D_q_A_.template bottomRows<1>() += D_q_ddq_;
+
+      D_dq_A_.template bottomRows<1>() += D_dq_ddq_;
+
+    }
+
+
+    //! Implementation for acceleration expressions at root.
+    template<typename ScalarType, typename Vector3Type, typename Matrix3Type, typename Vector6Type,
+             typename D_Vector6Type, typename RowVectorXType, typename MatrixXType>
+    inline static void
+    runAccelRoot(ScalarType u,
+                 ScalarType iD,
+                 ScalarType* ddq,
+                 const Eigen::MatrixBase<Vector3Type> & S,
+                 const Eigen::MatrixBase<Vector3Type> & P_r,
+                 const Eigen::MatrixBase<Matrix3Type> & R_r,
+                 const Eigen::MatrixBase<Vector6Type> & U_r,
+                 Eigen::MatrixBase<Vector6Type> & Acc_i_r,
+                 Eigen::MatrixBase<D_Vector6Type> & D_U_h_,
+                 Eigen::MatrixBase<RowVectorXType> & D_invD_,
+                 Eigen::MatrixBase<RowVectorXType> & D_q_u_,
+                 Eigen::MatrixBase<RowVectorXType> & D_dq_u_,
+                 Eigen::MatrixBase<D_Vector6Type> & D_q_A_,
+                 Eigen::MatrixBase<D_Vector6Type> & D_dq_A_,
+                 Eigen::MatrixBase<MatrixXType> & D_ddq_) {
+
+      EIGEN_STATIC_ASSERT(Vector6Type::ColsAtCompileTime == 1,
+                          YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX);
+
+      //! Acceleration bias and its derivative.
+      //!------------------------------------------------------------------------------!//
+      //! g = [ 0, 0, 9.81, 0, 0, 0 ]^T
+      //! Acc_a = Ad(G[Sz])*g = [ 0 0 9.81 0 0 0 ]^T
+      //! D_Acc_a = -ad(Sz)*Ad(G)*g = 0
+
+
+      //! Joint acceleration and its derivatives D_q_ddq and D_dq_ddq.
+      //!------------------------------------------------------------------------------!//
+      ScalarType ddq_;
+      ddq_ = u - 9.81*U_r.template segment<1>(2)(0);
+      (*ddq) = iD*ddq_;
+      //!-------------------------------------------------------
+      typename RowVectorXType::PlainObject D_q_ddq, D_dq_ddq;
+      D_q_ddq.noalias() = iD*D_q_u_;  D_dq_ddq.noalias() = iD*D_dq_u_;
+      D_q_ddq.segment(1,D_U_h_.cols()) += ddq_*D_invD_ - (iD*9.81)*D_U_h_.row(2);
+
+
+      //! Update spatial acceleration and its derivative.
+      //!------------------------------------------------------------------------------!//
+      Acc_i_r.coeffRef(2) = 9.81;
+      Acc_i_r.coeffRef(5) = iD*ddq_;
+      //!-------------------------------------------------------
+      D_q_A_.template bottomRows<1>() = D_q_ddq;  D_dq_A_.template bottomRows<1>() = D_dq_ddq;
+
+
+      //! Fill up D_ddq.
+      //!------------------------------------------------------------------------------!//
+      D_ddq_.row(0) << D_q_ddq, D_dq_ddq;
+    }
 
   };
 
