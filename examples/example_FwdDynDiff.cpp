@@ -24,7 +24,7 @@
 
 #define __FU_PATH_PREFIX__ "../../geombd_simplex/data/TROmodels/"
 //std::string urdf_dir = __FU_PATH_PREFIX__ "lwr.urdf"; //7
-std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_Z_python.urdf"; //24
+std::string urdf_dir = __FU_PATH_PREFIX__ "nao_inertial_python.urdf"; //24
 //std::string urdf_dir = __FU_PATH_PREFIX__ "HRP2.urdf"; //28
 //std::string urdf_dir = __FU_PATH_PREFIX__ "atlas.urdf"; //30
 
@@ -76,56 +76,56 @@ int main(){
 
   //  Eigen::internal::set_is_malloc_allowed(true);
 
-  std::cout<<"Forward dynamics + D = "<<t_total/M<<std::endl;
+//  std::cout<<"Forward dynamics + D = "<<t_total/M<<std::endl;
 
 
   auto ddq_crtp = robotDynamics->ddq;
 //  std::cout<<"ddq = "<<ddq_crtp.cwiseAbs().sum()<<std::endl;
 //  std::cout << std::scientific << std::setprecision(20) << ddq_crtp.cwiseAbs().sum() << std::endl;
   //!-------------------------------------------------------
-  auto D_ddq_crtp = robotDynamics->D_ddq;
-  double errr = D_ddq_crtp.cwiseAbs().sum() - 9.93696605170474795159e+04;
-  std::cout << "D_ddq_crtp error = "<< std::endl<< std::scientific << std::setprecision(20) << errr << std::endl;
+//  auto D_ddq_crtp = robotDynamics->D_ddq;
+//  double errr = D_ddq_crtp.cwiseAbs().sum();
+//  std::cout << "D_ddq_crtp = "<< std::endl<< std::scientific << std::setprecision(20) << errr << std::endl;
 
 
-//  //!------------------------------------------------------------------------------!//
-//  //!--------------Numeric verification through finite differences-----------------!//
-//  //!------------------------------------------------------------------------------!//
-//  auto ddq_ = robotDynamics->ddq;
-//  auto D_ddq_ = robotDynamics->D_ddq;
+  //!------------------------------------------------------------------------------!//
+  //!--------------Numeric verification through finite differences-----------------!//
+  //!------------------------------------------------------------------------------!//
+  auto ddq_ = robotDynamics->ddq;
+  auto D_ddq_ = robotDynamics->D_ddq;
 
-//  Eigen::Matrix<DataType, Eigen::Dynamic, Eigen::Dynamic> numericD_ddq(D_ddq_.rows(), D_ddq_.cols());
+  Eigen::Matrix<DataType, Eigen::Dynamic, Eigen::Dynamic> numericD_ddq(D_ddq_.rows(), D_ddq_.cols());
 
-//  double inc_s = pow(2,-24);  //induced variation
+  double inc_s = pow(2,-24);  //induced variation
 
-//  for(short int iter = 0 ; iter < n ; iter++){
-//      //! wrt q
-//      auto q_aux1 = q;
-//      q_aux1(iter) += inc_s;
+  for(short int iter = 0 ; iter < n ; iter++){
+      //! wrt q
+      auto q_aux1 = q;
+      q_aux1(iter) += inc_s;
 
-//      robotDynamics->D_aba(q_aux1, dq, tau);
+      robotDynamics->D_aba(q_aux1, dq, tau);
 
-//      auto temporal_ddq = robotDynamics->ddq;
+      auto temporal_ddq = robotDynamics->ddq;
 
-//      numericD_ddq.col(iter) = (temporal_ddq-ddq_)/inc_s;
+      numericD_ddq.col(iter) = (temporal_ddq-ddq_)/inc_s;
 
-//      //! wrt dq
-//      auto dq_aux1 = dq;
-//      dq_aux1(iter) += inc_s;
+      //! wrt dq
+      auto dq_aux1 = dq;
+      dq_aux1(iter) += inc_s;
 
-//      robotDynamics->D_aba(q, dq_aux1, tau);
+      robotDynamics->D_aba(q, dq_aux1, tau);
 
-//      temporal_ddq = robotDynamics->ddq;
+      temporal_ddq = robotDynamics->ddq;
 
-//      numericD_ddq.col(iter+n) = (temporal_ddq-ddq_)/inc_s;
-//    }
+      numericD_ddq.col(iter+n) = (temporal_ddq-ddq_)/inc_s;
+    }
 
-//  std::cout << "-------------------------- D_ddq" << std::endl;
-//  std::cout << "Analytic: " << D_ddq_.cwiseAbs().sum() << std::endl;
-//  std::cout << "Numeric: " << numericD_ddq.cwiseAbs().sum() << std::endl;
-//  auto error_in_D_ddq = D_ddq_ - numericD_ddq;
-//  std::cout << "Error: " << error_in_D_ddq.eval().cwiseAbs().sum() << std::endl;
-//  std::cout << "--------------------------" << std::endl;
+  std::cout << "-------------------------- D_ddq" << std::endl;
+  std::cout << "Analytic: " << D_ddq_.cwiseAbs().sum() << std::endl;
+  std::cout << "Numeric: " << numericD_ddq.cwiseAbs().sum() << std::endl;
+  auto error_in_D_ddq = D_ddq_ - numericD_ddq;
+  std::cout << "Error: " << error_in_D_ddq.eval().cwiseAbs().sum() << std::endl;
+  std::cout << "--------------------------" << std::endl;
 
   return 0;
 }

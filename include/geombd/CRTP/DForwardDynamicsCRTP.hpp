@@ -422,6 +422,7 @@ namespace geo {
               D_q_V_i_.template rightCols<1>() = Cbias[ID];
 
               D_dq_V_i_.resize(Eigen::NoChange, icol);
+              D_dq_V_i_.template rightCols<1>() << 0,0,0,0,0,0;
               D_dq_V_i_.template rightCols<1>().template segment<3>(3) = Screw_w[ID];
 
               //! Store
@@ -492,6 +493,8 @@ namespace geo {
 
               D_q_p[ID].noalias()  = D_p_*D_q_V_i_;
               D_dq_p[ID].noalias() = D_p_*D_dq_V_i_.derived();
+//              std::cout<<"D_q_V_i_ "<<ID<<std::endl<<D_q_V_i_.cwiseAbs().sum()<<std::endl;
+//              std::cout<<"D_dq_V_i_ "<<ID<<std::endl<<D_dq_V_i_.cwiseAbs().sum()<<std::endl;
             } else {
               //! Call CRTP visitor.
               //!------------------------------------------------------------------------------!//
@@ -499,6 +502,21 @@ namespace geo {
               visitorTCProot.p_ = &Pbias[ID];  visitorTCProot.M_ = &MConst[ID];   visitorTCProot.D_dq_p_ = &D_dq_p[ID];
               boost::apply_visitor( visitorTCProot, *JointTypesIter );
             }
+
+
+          //          std::cout<<"Twists "<<ID<<std::endl<<Twists[ID].cwiseAbs().sum()<<std::endl;
+          //          std::cout<<"Cbias "<<ID<<std::endl<<Cbias[ID].cwiseAbs().sum()<<std::endl;
+          //          std::cout<<"Pbias "<<ID<<std::endl<<Pbias[ID].cwiseAbs().sum()<<std::endl;
+//                    std::cout<<"D_q_V "<<ID<<std::endl<<D_q_V[ID]<<std::endl;
+//                    std::cout<<"D_dq_V "<<ID<<std::endl<<D_dq_V[ID]<<std::endl;
+//                    std::cout<<"D_dq_V_i_ "<<ID<<std::endl<<D_dq_V_i_<<std::endl;
+//                    std::cout<<"D_q_c "<<ID<<std::endl<<D_q_c[ID].cwiseAbs().sum()<<std::endl;
+//                    std::cout<<"D_dq_c "<<ID<<std::endl<<D_dq_c[ID].cwiseAbs().sum()<<std::endl;
+//                    std::cout<<"D_q_p "<<ID<<std::endl<<D_q_p[ID].cwiseAbs().sum()<<std::endl;
+//                    std::cout<<"D_dq_p "<<ID<<std::endl<<D_dq_p[ID].cwiseAbs().sum()<<std::endl;
+//                    std::cout<<"-----------------------------------------------------"<<std::endl;
+
+
           if (branchFlag[ID]) {
               if (isLeaf[ID]) {
                   D_q_PA[ID].noalias() = D_q_p[ID];
@@ -660,7 +678,7 @@ namespace geo {
                     } else {  //! Branched Body
                       //!-------------------------------------------------------------------------  D_MA
                       //            D_M_Aj_.template middleRows<6>((ID-j)*6) = Mtmp;
-                      D_M_A[IDj].middleRows((ID-IDj+1)*6, 6*(nS+1)) = D_M_A_i_;
+                      D_M_A[IDj].middleRows((ID-IDj-1)*6, 6*(nS+1)) = D_M_A_i_;
                       //!-------------------------------------------------------------------------  D_q_PA
                       D_Vec.noalias() = AdjointDual*D_q_Pa[ID];
                       D_Vec.leftCols(nPj) += D_q_PA[IDj].leftCols(nPj);
@@ -751,6 +769,24 @@ namespace geo {
               D_dq_PA[IDj].noalias() += AdjointDual*D_dq_Pa[ID];
 
             }
+
+
+
+
+          //          std::cout<<"invD "<<ID<<std::endl<<invD[ID]<<std::endl;
+          //          std::cout<<"u "<<ID<<std::endl<<u[ID]<<std::endl;
+          //          std::cout<<"U "<<ID<<std::endl<<U[ID].cwiseAbs().sum()<<std::endl;
+//          std::cout<<"D_invD "<<ID<<std::endl<<D_invD[ID].cwiseAbs().sum()<<std::endl;
+//          std::cout<<"D_U_h "<<ID<<std::endl<<D_U_h[ID].cwiseAbs().sum()<<std::endl;
+//          std::cout<<"D_U_v "<<ID<<std::endl<<D_U_v[ID].cwiseAbs().sum()<<std::endl;
+//          std::cout<<"D_q_u "<<ID<<std::endl<<D_q_u[ID].cwiseAbs().sum()<<std::endl;
+//          std::cout<<"D_dq_u "<<ID<<std::endl<<D_dq_u[ID].cwiseAbs().sum()<<std::endl;
+//          std::cout<<"-----------------------------------------------------"<<std::endl;
+
+
+
+
+
           ID--;
         }
 

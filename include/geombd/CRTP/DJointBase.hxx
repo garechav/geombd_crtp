@@ -71,7 +71,7 @@ namespace geo {
             typename Eigen::MatrixBase<D_Vector6Type> & D_dq_c_,
             typename Eigen::MatrixBase<D_Vector6Type> & D_q_c_aux_,
             typename Eigen::MatrixBase<D_Vector6Type> & D_dq_c_aux_) {
-      static_cast<Derived*>(this)->runD_TCP02(Sw_, D_dq_c_, D_q_c_, D_q_c_aux_, D_dq_c_aux_);
+      static_cast<Derived*>(this)->runD_TCP02(Sw_.derived(), D_q_c_.derived(), D_dq_c_.derived(), D_q_c_aux_.derived(), D_dq_c_aux_.derived());
     }
 
 
