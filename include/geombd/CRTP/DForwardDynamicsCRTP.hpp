@@ -258,18 +258,18 @@ namespace geo {
     typename std::vector< CV >::iterator JointTypesIter;
 
     D_FwdKin_visitor<ScalarType, Vector3r, Matrix3r> visitorFK;
-    D_TCP01_visitor<ScalarType, SpatialVector> visitorTCP01;
-    D_TCP02_visitor<D_SpatialVector> visitorTCP02;
+    D_TCP01_visitor<ScalarType, Vector3r, SpatialVector> visitorTCP01;
+    D_TCP02_visitor<Vector3r, D_SpatialVector> visitorTCP02;
     D_TCProot_visitor<ScalarType, Vector3r, SpatialVector, SpatialMatrix, D_SpatialVector> visitorTCProot;
 
-    Inertia01_visitor<SpatialVector, SpatialMatrix, VectorXr, D_SpatialMatrix> visitorInertia01;
-    Inertia02_visitor<ScalarType, SpatialVector, RowVectorXr, D_SpatialVector> visitorInertia02;
+    Inertia01_visitor<Vector3r, SpatialVector, SpatialMatrix, VectorXr, D_SpatialMatrix> visitorInertia01;
+    Inertia02_visitor<ScalarType, Vector3r, SpatialVector, RowVectorXr, D_SpatialVector> visitorInertia02;
     Inertia03_visitor<index_t, Vector3r, Matrix3r, SpatialVector, SpatialMatrix, D_SpatialMatrix> visitorInertia03;
-    Leaf01_visitor<ScalarType, SpatialVector, SpatialMatrix, RowVectorXr, D_SpatialVector> visitorLeaf01;
+    Leaf01_visitor<ScalarType, Vector3r, SpatialVector, SpatialMatrix, RowVectorXr, D_SpatialVector> visitorLeaf01;
     Leaf02_visitor<Vector3r, Matrix3r, SpatialVector, SpatialMatrix, D_SpatialMatrix> visitorLeaf02;
 
-    Accel01_visitor<SpatialVector> visitorAccel01;
-    Accel02_visitor<ScalarType, SpatialVector, RowVectorXr, D_SpatialVector> visitorAccel02;
+    Accel01_visitor<Vector3r, SpatialVector> visitorAccel01;
+    Accel02_visitor<ScalarType, Vector3r, SpatialVector, RowVectorXr, D_SpatialVector> visitorAccel02;
     AccelRoot_visitor<ScalarType, Vector3r, Matrix3r, SpatialVector, D_SpatialVector, RowVectorXr, MatrixXr> visitorRoot;
 
 
@@ -413,7 +413,7 @@ namespace geo {
 
               //! Call CRTP visitor.
               //!------------------------------------------------------------------------------!//
-              visitorTCP01.vi = v(ID);  visitorTCP01.S_ = &Twists[ID];  visitorTCP01.C_ = &Cbias[ID];
+              visitorTCP01.vi = v(ID);  visitorTCP01.Sw_ = &Screw_w[ID];  visitorTCP01.S_ = &Twists[ID];  visitorTCP01.C_ = &Cbias[ID];
               boost::apply_visitor( visitorTCP01, *JointTypesIter );
 
               //! Twist differentiation -> taking advantage of c bias computation.
@@ -442,7 +442,7 @@ namespace geo {
 
               //! Call CRTP visitor.
               //!------------------------------------------------------------------------------!//
-              visitorTCP02.D_q_c_ = &D_q_c[ID];       visitorTCP02.D_dq_c_ = &D_dq_c[ID];
+              visitorTCP02.D_q_c_ = &D_q_c[ID];       visitorTCP02.D_dq_c_ = &D_dq_c[ID];     visitorTCP02.Sw_ = &Screw_w[ID];
               visitorTCP02.D_q_c_aux_ = &D_q_c_aux;   visitorTCP02.D_dq_c_aux_ = &D_dq_c_aux;
               boost::apply_visitor( visitorTCP02, *JointTypesIter );
 
@@ -539,7 +539,7 @@ namespace geo {
 
               //! Call CRTP visitor.
               //!------------------------------------------------------------------------------!//
-              visitorInertia01.U_ = &U[ID];          visitorInertia01.M_A_ = &M_A[ID];
+              visitorInertia01.Sw_ = &Screw_w[ID];    visitorInertia01.U_ = &U[ID];          visitorInertia01.M_A_ = &M_A[ID];
               visitorInertia01.D_U_v_ = &D_U_v[ID];  visitorInertia01.D_M_A_i_ = &D_M_A_i_;
               boost::apply_visitor( visitorInertia01, *JointTypesIter );
 
@@ -549,7 +549,7 @@ namespace geo {
 
               //! Call CRTP visitor.
               //!------------------------------------------------------------------------------!//
-              visitorInertia02.invD_ = &invD[ID];      visitorInertia02.u_ = &u[ID];
+              visitorInertia02.invD_ = &invD[ID];      visitorInertia02.u_ = &u[ID];            visitorInertia02.Sw_ = &Screw_w[ID];
               visitorInertia02.U_ = &U[ID];            visitorInertia02.P_A_ = &P_A[ID];
               visitorInertia02.D_invD_ = &D_invD[ID];  visitorInertia02.D_q_u_ = &D_q_u[ID];    visitorInertia02.D_dq_u_ = &D_dq_u[ID];
               visitorInertia02.D_U_h_ = &D_U_h[ID];    visitorInertia02.D_q_PA_ = &D_q_PA[ID];  visitorInertia02.D_dq_PA_ = &D_dq_PA[ID];
@@ -638,7 +638,7 @@ namespace geo {
 
                   //! Call CRTP visitor.
                   //!------------------------------------------------------------------------------!//
-                  visitorInertia03.P_z_ = P_zero[ID];  visitorInertia03.nS_ = nS;         visitorInertia03.P_ = &TransConst[ID];
+                  visitorInertia03.P_z_ = P_zero[ID];  visitorInertia03.nS_ = nS;         visitorInertia03.Sw_ = &Screw_w[ID];   visitorInertia03.P_ = &TransConst[ID];
                   visitorInertia03.R_ = &Rot[ID];      visitorInertia03.P_a_ = &P_a[ID];  visitorInertia03.P_A_i_ = &P_A_i;
                   visitorInertia03.M_a_ = &M_a[ID];    visitorInertia03.Mtmp_ = &Mtmp;    visitorInertia03.D_M_A_i_ = &D_M_A_i_;
                   boost::apply_visitor( visitorInertia03, *JointTypesIter );
@@ -689,7 +689,7 @@ namespace geo {
 
               //! Call CRTP visitor.
               //!------------------------------------------------------------------------------!//
-              visitorLeaf01.invD_ = &invD[ID];      visitorLeaf01.u_ = &u[ID];            visitorLeaf01.U_ = &U[ID];
+              visitorLeaf01.invD_ = &invD[ID];      visitorLeaf01.u_ = &u[ID];            visitorLeaf01.U_ = &U[ID];             visitorLeaf01.Sw_ = &Screw_w[ID];
               visitorLeaf01.P_A_ = &P_A[ID];        visitorLeaf01.M_A_ = &M_A[ID];        visitorLeaf01.D_q_u_ = &D_q_u[ID];
               visitorLeaf01.D_dq_u_ = &D_dq_u[ID];  visitorLeaf01.D_q_PA_ = &D_q_PA[ID];  visitorLeaf01.D_dq_PA_ = &D_dq_PA[ID];
               boost::apply_visitor( visitorLeaf01, *JointTypesIter );
@@ -723,8 +723,8 @@ namespace geo {
 
               //! Call CRTP visitor.
               //!------------------------------------------------------------------------------!//
-              visitorLeaf02.P_z_ = P_zero[ID];  visitorLeaf02.P_ = &TransConst[ID];  visitorLeaf02.R_ = &Rot[ID];  visitorLeaf02.P_A_i_ = &P_A_i;
-              visitorLeaf02.P_a_ = &P_a[ID];    visitorLeaf02.M_a_ = &M_a[ID];  visitorLeaf02.M_A_j_ = &M_A[IDj];  visitorLeaf02.D_M_A_j_ = &D_M_A[IDj];
+              visitorLeaf02.P_z_ = P_zero[ID];  visitorLeaf02.Sw_ = &Screw_w[ID];  visitorLeaf02.P_ = &TransConst[ID];  visitorLeaf02.R_ = &Rot[ID];  visitorLeaf02.P_A_i_ = &P_A_i;
+              visitorLeaf02.P_a_ = &P_a[ID];    visitorLeaf02.M_a_ = &M_a[ID];     visitorLeaf02.M_A_j_ = &M_A[IDj];  visitorLeaf02.D_M_A_j_ = &D_M_A[IDj];
               boost::apply_visitor( visitorLeaf02, *JointTypesIter );
 
               //              typename GEOMBD_EIGEN_PLAIN_TYPE(SpatialMatrix) AdjointDual;
@@ -788,7 +788,7 @@ namespace geo {
 
               //! Call CRTP visitor.
               //!------------------------------------------------------------------------------!//
-              visitorAccel01.AdAj_ = &AdAj;  visitorAccel01.Aa_ = &Aa_;
+              visitorAccel01.Sw_ = &Screw_w[ID];  visitorAccel01.AdAj_ = &AdAj;  visitorAccel01.Aa_ = &Aa_;
               boost::apply_visitor( visitorAccel01, *JointTypesIter );
 
               Aa_.noalias() += Cbias[ID];
@@ -838,7 +838,7 @@ namespace geo {
 
                   //! Call CRTP visitor.
                   //!------------------------------------------------------------------------------!//
-                  visitorAccel02.ddq_ = &ddq_;  visitorAccel02.A_ = &Accel[ID];  visitorAccel02.D_q_A_ = &D_q_A[ID];
+                  visitorAccel02.ddq_ = &ddq_;  visitorAccel02.Sw_ = &Screw_w[ID];  visitorAccel02.A_ = &Accel[ID];  visitorAccel02.D_q_A_ = &D_q_A[ID];
                   visitorAccel02.D_dq_A_ = &D_dq_A[ID];  visitorAccel02.D_q_ddq_ = &D_q_ddq;  visitorAccel02.D_dq_ddq_ = &D_dq_ddq;
                   boost::apply_visitor( visitorAccel02, *JointTypesIter );
 

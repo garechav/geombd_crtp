@@ -55,9 +55,10 @@ namespace geo{
 
     //! TCP01 Declaration
     //!------------------------------------------------------------------------------!//
-    template<typename ScalarType, typename Vector6Type>
+    template<typename ScalarType, typename Vector3Type, typename Vector6Type>
     inline static void
     runD_TCP01(const ScalarType & vi,
+               typename Eigen::MatrixBase<Vector3Type> & Sw_,
                typename Eigen::MatrixBase<Vector6Type> & S_,
                typename Eigen::MatrixBase<Vector6Type> & C_) {
       //!------------------------------------------------------------------------------!//
@@ -82,9 +83,10 @@ namespace geo{
 
     //! TCP02 Declaration
     //!------------------------------------------------------------------------------!//
-    template<typename D_Vector6Type>
+    template<typename Vector3Type, typename D_Vector6Type>
     inline static void
-    runD_TCP02(typename Eigen::MatrixBase<D_Vector6Type> & D_q_c_,
+    runD_TCP02(typename Eigen::MatrixBase<Vector3Type> & Sw_,
+               typename Eigen::MatrixBase<D_Vector6Type> & D_q_c_,
                typename Eigen::MatrixBase<D_Vector6Type> & D_dq_c_,
                typename Eigen::MatrixBase<D_Vector6Type> & D_q_c_aux_,
                typename Eigen::MatrixBase<D_Vector6Type> & D_dq_c_aux_) {
@@ -135,9 +137,10 @@ namespace geo{
 
     //! Inertial Terms 01 Declaration.
     //!------------------------------------------------------------------------------!//
-    template<typename Vector6Type, typename Matrix6Type, typename VectorXType, typename D_Matrix6Type>
+    template<typename Vector3Type, typename Vector6Type, typename Matrix6Type, typename VectorXType, typename D_Matrix6Type>
     inline static void
-    runInertia01(typename Eigen::MatrixBase<Vector6Type> & U_,
+    runInertia01(typename Eigen::MatrixBase<Vector3Type> & Sw_,
+                 typename Eigen::MatrixBase<Vector6Type> & U_,
                  typename Eigen::MatrixBase<Matrix6Type> & M_A_,
                  typename Eigen::MatrixBase<VectorXType> & D_U_v_,
                  typename Eigen::MatrixBase<D_Matrix6Type> & D_M_A_i_) {
@@ -153,10 +156,11 @@ namespace geo{
 
     //! Inertial Terms 02 Declaration.
     //!------------------------------------------------------------------------------!//
-    template<typename ScalarType, typename Vector6Type, typename RowVectorXType, typename D_Vector6Type>
+    template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename RowVectorXType, typename D_Vector6Type>
     inline static void
     runInertia02(ScalarType & invD_,
                  ScalarType & u_,
+                 typename Eigen::MatrixBase<Vector3Type> & Sw_,
                  typename Eigen::MatrixBase<Vector6Type> & U_,
                  typename Eigen::MatrixBase<Vector6Type> & P_A_,
                  typename Eigen::MatrixBase<RowVectorXType> & D_invD_,
@@ -188,6 +192,7 @@ namespace geo{
     inline static void
     runInertia03(bool P_z_,
                  IndexType nS_,
+                 typename Eigen::MatrixBase<Vector3Type> & Sw_,
                  typename Eigen::MatrixBase<Vector3Type> & P_,
                  typename Eigen::MatrixBase<Matrix3Type> & R_,
                  typename Eigen::MatrixBase<Vector6Type> & P_a_,
@@ -230,10 +235,11 @@ namespace geo{
 
     //! Leaf Terms 01 Declaration.
     //!------------------------------------------------------------------------------!//
-    template<typename ScalarType, typename Vector6Type, typename Matrix6Type, typename RowVectorXType, typename D_Vector6Type>
+    template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type, typename RowVectorXType, typename D_Vector6Type>
     inline static void
     runLeaf01(ScalarType & invD_,
               ScalarType & u_,
+              typename Eigen::MatrixBase<Vector3Type> & Sw_,
               typename Eigen::MatrixBase<Vector6Type> & U_,
               typename Eigen::MatrixBase<Vector6Type> & P_A_,
               typename Eigen::MatrixBase<Matrix6Type> & M_A_,
@@ -258,6 +264,7 @@ namespace geo{
     template<typename Vector3Type, typename Matrix3Type, typename Vector6Type, typename Matrix6Type, typename D_Matrix6Type>
     inline static void
     runLeaf02(bool P_z_,
+              typename Eigen::MatrixBase<Vector3Type> & Sw_,
               typename Eigen::MatrixBase<Vector3Type> & P_,
               typename Eigen::MatrixBase<Matrix3Type> & R_,
               typename Eigen::MatrixBase<Vector6Type> & P_A_i_,
@@ -302,9 +309,10 @@ namespace geo{
 
     //! Spatial Acceleration 01 Declaration.
     //!------------------------------------------------------------------------------!//
-    template<typename Vector6Type>
+    template<typename Vector3Type, typename Vector6Type>
     inline static void
-    runAccel01(typename Eigen::MatrixBase<Vector6Type> & AdAj_,
+    runAccel01(typename Eigen::MatrixBase<Vector3Type> & Sw_,
+               typename Eigen::MatrixBase<Vector6Type> & AdAj_,
                typename Eigen::MatrixBase<Vector6Type> & Aa_) {
 
       //! Mimicking effect -ad(Sy)*Ad*Aj
@@ -316,14 +324,15 @@ namespace geo{
 
     //! Spatial Acceleration 02 Declaration.
     //!------------------------------------------------------------------------------!//
-    template<typename ScalarType, typename Vector6Type, typename RowVectorXType, typename D_Vector6Type>
+    template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename RowVectorXType, typename D_Vector6Type>
     inline static void
     runAccel02(ScalarType* ddq_,
-               Eigen::MatrixBase<Vector6Type> & A_,
-               Eigen::MatrixBase<D_Vector6Type> & D_q_A_,
-               Eigen::MatrixBase<D_Vector6Type> & D_dq_A_,
-               Eigen::MatrixBase<RowVectorXType> & D_q_ddq_,
-               Eigen::MatrixBase<RowVectorXType> & D_dq_ddq_) {
+               typename Eigen::MatrixBase<Vector3Type> & Sw_,
+               typename Eigen::MatrixBase<Vector6Type> & A_,
+               typename Eigen::MatrixBase<D_Vector6Type> & D_q_A_,
+               typename Eigen::MatrixBase<D_Vector6Type> & D_dq_A_,
+               typename Eigen::MatrixBase<RowVectorXType> & D_q_ddq_,
+               typename Eigen::MatrixBase<RowVectorXType> & D_dq_ddq_) {
 
       //! Update spatial acceleration and its derivatives D_q_A_ and D_dq_A_.
       //!------------------------------------------------------------------------------!//
