@@ -4,7 +4,8 @@ echo "Powered by Cinvestav"
 
 
 echo "Cloning Eigen3 repository"
-git clone --depth 1 --branch before-git-migration https://gitlab.com/libeigen/eigen.git
+git clone -b 3.4.0 https://gitlab.com/libeigen/eigen.git
+#git clone --depth 1 --branch before-git-migration https://gitlab.com/libeigen/eigen.git
 mv eigen eigen3
 
 

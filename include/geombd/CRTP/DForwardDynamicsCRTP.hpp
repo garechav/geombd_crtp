@@ -21,7 +21,6 @@
 //#include "geombd/CRTP/traits/GeoOperator"
 
 #include "geombd/CRTP/DJointBase.hxx"
-#include "geombd/pinocchio/container/aligned-vector.hpp"
 #include "geombd/io/parser.hpp"
 
 namespace geo {
@@ -207,11 +206,11 @@ namespace geo {
               D_dq_V[i-1].template rightCols<1>().template segment<3>(3) = axis;
               //!------------------------------------------------------------------------------!//
               if((real_t)axis(0) == 1) {
-//                  JointTypesVec.push_back( D_JointTypeRx{} );
+                  JointTypesVec.push_back( D_JointTypeRx{} );
                 }
               //!------------------------------------------------------------------------------!//
               if((real_t)axis(1) == 1) {
-//                  JointTypesVec.push_back( D_JointTypeRy{} );
+                  JointTypesVec.push_back( D_JointTypeRy{} );
                 }
               //!------------------------------------------------------------------------------!//
               if((real_t)axis(2) == 1) {
@@ -219,7 +218,7 @@ namespace geo {
                 }
               //!------------------------------------------------------------------------------!//
               if((real_t)axis(1) != 0 && (real_t)axis(2) != 0) {
-//                  JointTypesVec.push_back( D_JointTypeRxyz{} );
+                  JointTypesVec.push_back( D_JointTypeRxyz{} );
                 }
 
             }
@@ -251,7 +250,7 @@ namespace geo {
     std::vector< index_t > parent;
 
     //! Joint-types variant
-    typedef boost::variant< D_JointTypeRz > CV;
+    typedef boost::variant< D_JointTypeRx, D_JointTypeRy, D_JointTypeRz, D_JointTypeRxyz > CV;
 
     //! Joint-types vector
     std::vector< CV > JointTypesVec;
@@ -272,26 +271,14 @@ namespace geo {
     Accel02_visitor<ScalarType, Vector3r, SpatialVector, RowVectorXr, D_SpatialVector> visitorAccel02;
     AccelRoot_visitor<ScalarType, Vector3r, Matrix3r, SpatialVector, D_SpatialVector, RowVectorXr, MatrixXr> visitorRoot;
 
+    //!------------------------------------------------------------------------------!//
 
-    PINOCCHIO_ALIGNED_STD_VECTOR( Vector3r ) Trans;
-    PINOCCHIO_ALIGNED_STD_VECTOR( Matrix3r ) Rot;
-    PINOCCHIO_ALIGNED_STD_VECTOR( Vector3r ) TransConst;
-    PINOCCHIO_ALIGNED_STD_VECTOR( Matrix3r ) RotConst;
-    PINOCCHIO_ALIGNED_STD_VECTOR( Vector3r ) Screw_w;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) Twists;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) Cbias;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) Pbias;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialMatrix ) MConst;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialMatrix ) M_a;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialMatrix ) M_A;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) P_a;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) P_A;
+    std::vector< Vector3r, Eigen::aligned_allocator<Vector3r> > Trans, TransConst, Screw_w;
+    std::vector< Matrix3r, Eigen::aligned_allocator<Matrix3r> > Rot, RotConst;
+    std::vector< SpatialVector, Eigen::aligned_allocator<SpatialVector> > Twists, Cbias, Pbias, P_a, P_A, U, Accel;
+    std::vector< SpatialMatrix, Eigen::aligned_allocator<SpatialMatrix> > MConst, M_a, M_A;
+    std::vector< real_t, Eigen::aligned_allocator<real_t> > u, invD;
 
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) U;
-    PINOCCHIO_ALIGNED_STD_VECTOR( real_t ) u;
-    PINOCCHIO_ALIGNED_STD_VECTOR( real_t ) invD;
-
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) Accel;
     VectorXr ddq;
 
     //!------------------------------------------------------------------------------!//
@@ -307,25 +294,14 @@ namespace geo {
 
     SpatialMatrix D_p_aux;
 
-    PINOCCHIO_ALIGNED_STD_VECTOR( D_SpatialVector ) D_q_V;   PINOCCHIO_ALIGNED_STD_VECTOR( D_SpatialVector ) D_dq_V;
-    PINOCCHIO_ALIGNED_STD_VECTOR( D_SpatialVector ) D_q_c;   PINOCCHIO_ALIGNED_STD_VECTOR( D_SpatialVector ) D_dq_c;
 
+    std::vector< D_SpatialVector, Eigen::aligned_allocator<D_SpatialVector> > D_q_V, D_dq_V, D_q_c, D_dq_c, D_U_h,
+                                                   D_q_p, D_dq_p, D_q_Pa, D_dq_Pa, D_q_PA, D_dq_PA, D_q_A, D_dq_A;
 
-    //    std::vector< D_RowSpatialVector, Eigen::aligned_allocator<D_SpatialVector> > D_q_c;
-    //    std::vector< D_RowSpatialVector, Eigen::aligned_allocator<D_SpatialVector> > D_dq_c;
-
-
-    PINOCCHIO_ALIGNED_STD_VECTOR( Vector6int ) indexVec;
-    PINOCCHIO_ALIGNED_STD_VECTOR( D_SpatialVector ) D_U_h;   PINOCCHIO_ALIGNED_STD_VECTOR( VectorXr ) D_U_v;  // D_U horizontally and vertically arranged
-    PINOCCHIO_ALIGNED_STD_VECTOR( RowVectorXr ) D_invD;
-    PINOCCHIO_ALIGNED_STD_VECTOR( D_SpatialMatrix ) D_M_A;
-
-    PINOCCHIO_ALIGNED_STD_VECTOR( RowVectorXr ) D_q_u;       PINOCCHIO_ALIGNED_STD_VECTOR( RowVectorXr ) D_dq_u;
-    PINOCCHIO_ALIGNED_STD_VECTOR( D_SpatialVector ) D_q_p;  PINOCCHIO_ALIGNED_STD_VECTOR( D_SpatialVector ) D_dq_p;
-    PINOCCHIO_ALIGNED_STD_VECTOR( D_SpatialVector ) D_q_Pa;  PINOCCHIO_ALIGNED_STD_VECTOR( D_SpatialVector ) D_dq_Pa;
-    PINOCCHIO_ALIGNED_STD_VECTOR( D_SpatialVector ) D_q_PA;  PINOCCHIO_ALIGNED_STD_VECTOR( D_SpatialVector ) D_dq_PA;
-
-    PINOCCHIO_ALIGNED_STD_VECTOR( D_SpatialVector ) D_q_A;   PINOCCHIO_ALIGNED_STD_VECTOR( D_SpatialVector ) D_dq_A;
+    std::vector< Vector6int, Eigen::aligned_allocator<Vector6int> > indexVec;
+    std::vector< RowVectorXr, Eigen::aligned_allocator<RowVectorXr> > D_invD, D_q_u, D_dq_u;
+    std::vector< D_SpatialMatrix, Eigen::aligned_allocator<D_SpatialMatrix> > D_M_A;
+    std::vector< VectorXr, Eigen::aligned_allocator<VectorXr> > D_U_v;
 
     MatrixXr D_ddq;
 
@@ -378,11 +354,11 @@ namespace geo {
               //!------------------------------------------------------------------------------!//
               static D_SpatialVector D_q_V_i_, D_dq_V_i_;
 
-              if(icol == 2) {
+              if(ID == 1) {
                   D_q_V_i_ = D_SpatialVector::Zero(6,1);
                   D_dq_V_i_ = D_dq_V[IDj];
                 }
-              if(icol == 7) {
+              if(indexVec[ID].coeff(5) > 1) {
                   D_q_V_i_ = D_q_V[IDj];
                   D_dq_V_i_ = D_dq_V[IDj];
                 }
@@ -422,11 +398,11 @@ namespace geo {
               D_q_V_i_.template rightCols<1>() = Cbias[ID];
 
               D_dq_V_i_.resize(Eigen::NoChange, icol);
-              D_dq_V_i_.template rightCols<1>() << 0,0,0,0,0,0;
+              D_dq_V_i_.template rightCols<1>().setZero();// << 0,0,0,0,0,0;
               D_dq_V_i_.template rightCols<1>().template segment<3>(3) = Screw_w[ID];
 
               //! Store
-              if(icol==6) {
+              if(branchFlag[ID]) {
                   D_q_V[ID] = D_q_V_i_;
                   D_dq_V[ID] = D_dq_V_i_;
                 }
@@ -493,8 +469,7 @@ namespace geo {
 
               D_q_p[ID].noalias()  = D_p_*D_q_V_i_;
               D_dq_p[ID].noalias() = D_p_*D_dq_V_i_.derived();
-//              std::cout<<"D_q_V_i_ "<<ID<<std::endl<<D_q_V_i_.cwiseAbs().sum()<<std::endl;
-//              std::cout<<"D_dq_V_i_ "<<ID<<std::endl<<D_dq_V_i_.cwiseAbs().sum()<<std::endl;
+
             } else {
               //! Call CRTP visitor.
               //!------------------------------------------------------------------------------!//
@@ -502,20 +477,6 @@ namespace geo {
               visitorTCProot.p_ = &Pbias[ID];  visitorTCProot.M_ = &MConst[ID];   visitorTCProot.D_dq_p_ = &D_dq_p[ID];
               boost::apply_visitor( visitorTCProot, *JointTypesIter );
             }
-
-
-          //          std::cout<<"Twists "<<ID<<std::endl<<Twists[ID].cwiseAbs().sum()<<std::endl;
-          //          std::cout<<"Cbias "<<ID<<std::endl<<Cbias[ID].cwiseAbs().sum()<<std::endl;
-          //          std::cout<<"Pbias "<<ID<<std::endl<<Pbias[ID].cwiseAbs().sum()<<std::endl;
-//                    std::cout<<"D_q_V "<<ID<<std::endl<<D_q_V[ID]<<std::endl;
-//                    std::cout<<"D_dq_V "<<ID<<std::endl<<D_dq_V[ID]<<std::endl;
-//                    std::cout<<"D_dq_V_i_ "<<ID<<std::endl<<D_dq_V_i_<<std::endl;
-//                    std::cout<<"D_q_c "<<ID<<std::endl<<D_q_c[ID].cwiseAbs().sum()<<std::endl;
-//                    std::cout<<"D_dq_c "<<ID<<std::endl<<D_dq_c[ID].cwiseAbs().sum()<<std::endl;
-//                    std::cout<<"D_q_p "<<ID<<std::endl<<D_q_p[ID].cwiseAbs().sum()<<std::endl;
-//                    std::cout<<"D_dq_p "<<ID<<std::endl<<D_dq_p[ID].cwiseAbs().sum()<<std::endl;
-//                    std::cout<<"-----------------------------------------------------"<<std::endl;
-
 
           if (branchFlag[ID]) {
               if (isLeaf[ID]) {
@@ -547,11 +508,10 @@ namespace geo {
               nPj = indexVec[ID].coeff(4);  nChild = indexVec[ID].coeff(5);
               static D_SpatialMatrix D_M_A_i_;
 
-              //! if it's a parent's leaf or has multiple children
               if(nS == 1) {
                   D_M_A_i_ = D_M_A[ID];
                 }
-              if(ID == 5) {   // change condition to no. of children of i > 1
+              if(branchFlag[ID]) {
                   D_M_A_i_ = D_M_A[ID];
                 }
 
@@ -769,23 +729,6 @@ namespace geo {
               D_dq_PA[IDj].noalias() += AdjointDual*D_dq_Pa[ID];
 
             }
-
-
-
-
-          //          std::cout<<"invD "<<ID<<std::endl<<invD[ID]<<std::endl;
-          //          std::cout<<"u "<<ID<<std::endl<<u[ID]<<std::endl;
-          //          std::cout<<"U "<<ID<<std::endl<<U[ID].cwiseAbs().sum()<<std::endl;
-//          std::cout<<"D_invD "<<ID<<std::endl<<D_invD[ID].cwiseAbs().sum()<<std::endl;
-//          std::cout<<"D_U_h "<<ID<<std::endl<<D_U_h[ID].cwiseAbs().sum()<<std::endl;
-//          std::cout<<"D_U_v "<<ID<<std::endl<<D_U_v[ID].cwiseAbs().sum()<<std::endl;
-//          std::cout<<"D_q_u "<<ID<<std::endl<<D_q_u[ID].cwiseAbs().sum()<<std::endl;
-//          std::cout<<"D_dq_u "<<ID<<std::endl<<D_dq_u[ID].cwiseAbs().sum()<<std::endl;
-//          std::cout<<"-----------------------------------------------------"<<std::endl;
-
-
-
-
 
           ID--;
         }
