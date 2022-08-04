@@ -182,22 +182,22 @@ namespace geo {
             }
           if (joint->type == Joint::joint_type::revolute) {
               D_dq_V[i-1].template rightCols<1>().template segment<3>(3) = axis;
-              //!-------------------------------------------------------
-              if((real_t)axis(0) == 1) {
-                  JointTypesVec.push_back( D_JointTypeRx{} );
-                }
-              //!-------------------------------------------------------
-              if((real_t)axis(1) == 1) {
-                  JointTypesVec.push_back( D_JointTypeRy{} );
-                }
-              //!-------------------------------------------------------
-              if((real_t)axis(2) == 1) {
-                  JointTypesVec.push_back( D_JointTypeRz{} );
-                }
-              //!-------------------------------------------------------
-              if((real_t)axis(1) != 0 && (real_t)axis(2) != 0) {
-                JointTypesVec.push_back( D_JointTypeRxyz{} );
-                }
+//              //!-------------------------------------------------------
+//              if((real_t)axis(0) == 1) {
+//                  JointTypesVec.push_back( D_JointTypeRx{} );
+//                }
+//              //!-------------------------------------------------------
+//              if((real_t)axis(1) == 1) {
+//                  JointTypesVec.push_back( D_JointTypeRy{} );
+//                }
+//              //!-------------------------------------------------------
+//              if((real_t)axis(2) == 1) {
+//                  JointTypesVec.push_back( D_JointTypeRz{} );
+//                }
+//              //!-------------------------------------------------------
+//              if((real_t)axis(1) != 0 && (real_t)axis(2) != 0) {
+                  JointTypesVec.push_back( D_JointTypeRxyz{} );
+//                }
 
             }
 
