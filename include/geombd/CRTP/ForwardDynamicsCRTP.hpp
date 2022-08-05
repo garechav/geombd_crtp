@@ -14,8 +14,6 @@
 
 #include "geombd/CRTP/JointBase.hxx"
 
-#include "geombd/pinocchio/container/aligned-vector.hpp"
-
 #define EIGEN_NO_DEBUG
 #include "geombd/io/parser.hpp"
 
@@ -168,25 +166,14 @@ namespace geoCRTP
     Accel_visitor<ScalarType, Vector3r, Matrix3r, SpatialVector> AccelVis;
     Accel_root_visitor<ScalarType, Vector3r, Matrix3r, SpatialVector> Accel_rootVis;
 
-    PINOCCHIO_ALIGNED_STD_VECTOR( Vector3r ) Trans;
-    PINOCCHIO_ALIGNED_STD_VECTOR( Matrix3r ) Rot;
-    PINOCCHIO_ALIGNED_STD_VECTOR( Vector3r ) TransConst;
-    PINOCCHIO_ALIGNED_STD_VECTOR( Matrix3r ) RotConst;
-    PINOCCHIO_ALIGNED_STD_VECTOR( Vector3r ) Screw_w;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) Twists;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) Cbias;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) Pbias;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialMatrix ) MConst;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialMatrix ) M_a;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialMatrix ) M_A;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) P_a;
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) P_A;
 
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) U;
-    PINOCCHIO_ALIGNED_STD_VECTOR( real_t ) u;
-    PINOCCHIO_ALIGNED_STD_VECTOR( real_t ) invD;
+    std::vector< Vector3r, Eigen::aligned_allocator<Vector3r> > Trans, TransConst, Screw_w;
+    std::vector< Matrix3r, Eigen::aligned_allocator<Matrix3r> > Rot, RotConst;
+    std::vector< SpatialVector, Eigen::aligned_allocator<SpatialVector> > Twists, Cbias, Pbias, P_a, P_A, U, Accel;
+    std::vector< SpatialMatrix, Eigen::aligned_allocator<SpatialMatrix> > MConst, M_a, M_A;
+    std::vector< real_t, Eigen::aligned_allocator<real_t> > u, invD;
 
-    PINOCCHIO_ALIGNED_STD_VECTOR( SpatialVector ) Accel;
+
     VectorXr ddq;
 
     // --------------------------------------------

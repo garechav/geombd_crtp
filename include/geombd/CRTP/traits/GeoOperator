@@ -1,0 +1,342 @@
+// This file is part of Eigen, a lightweight C++ template library
+// for linear algebra.
+//
+//
+// This Source Code Form is subject to the terms of the Mozilla
+// Public License v. 2.0. If a copy of the MPL was not distributed
+// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#ifndef EIGEN_GEOMETRIC_OPERATOR_MODULE_H
+#define EIGEN_GEOMETRIC_OPERATOR_MODULE_H
+
+#include "../../eigen3/Eigen/Core"
+
+#include "../../eigen3/Eigen/src/Core/util/DisableStupidWarnings.h"
+
+namespace Eigen {
+
+/**
+  * \defgroup GeometricOperator_Module GeometricOperator module
+  *
+  * This module contains an experimental geometric operator implementation.
+  *
+  * \code
+  * #include <Eigen/GeometricOperator>
+  * \endcode
+  */
+
+} // namespace Eigen
+
+#include "geombd/CRTP/traits/geoOperator.h"
+
+#include "../../eigen3/Eigen/src/Core/util/ReenableStupidWarnings.h"
+
+
+
+#include <iostream>
+
+//!------------------------------------------------------------------------------!//
+//!----------------------------------ad(Sx)--------------------------------------!//
+//!------------------------------------------------------------------------------!//
+
+template <class ArgType> class adSxBase;
+
+
+namespace Eigen {
+  namespace internal {
+    template <class ArgType>
+    struct traits<adSxBase<ArgType> >
+    {
+      typedef Eigen::Dense StorageKind;
+      typedef Eigen::MatrixXpr XprKind;
+      typedef typename ArgType::StorageIndex StorageIndex;
+      typedef typename ArgType::Scalar Scalar;
+      enum {
+        Flags = Eigen::ColMajor,
+        RowsAtCompileTime = 6,
+        ColsAtCompileTime = ArgType::RowsAtCompileTime,
+        MaxRowsAtCompileTime = 6,
+        MaxColsAtCompileTime = ArgType::MaxRowsAtCompileTime
+      };
+    };
+  }
+}
+
+
+template <class ArgType>
+class adSxBase : public Eigen::MatrixBase<adSxBase<ArgType> >
+{
+public:
+  adSxBase(const ArgType& arg)
+    : m_arg(arg)
+  {}
+
+  typedef typename Eigen::internal::ref_selector<adSxBase>::type Nested;
+
+  typedef Eigen::Index Index;
+  Index rows() const { return m_arg.rows(); }
+  Index cols() const { return m_arg.cols(); }
+
+  typedef typename Eigen::internal::ref_selector<ArgType>::type ArgTypeNested;
+  ArgTypeNested m_arg;
+};
+
+
+namespace Eigen {
+  namespace internal {
+    template<typename ArgType>
+    struct evaluator<adSxBase<ArgType> >
+      : evaluator_base<adSxBase<ArgType> >
+    {
+      typedef adSxBase<ArgType> XprType;
+      typedef typename nested_eval<ArgType, XprType::ColsAtCompileTime>::type ArgTypeNested;
+      typedef typename remove_all<ArgTypeNested>::type ArgTypeNestedCleaned;
+      typedef typename XprType::CoeffReturnType CoeffReturnType;
+
+      enum {
+        CoeffReadCost = evaluator<ArgTypeNestedCleaned>::CoeffReadCost,
+        Flags = Eigen::ColMajor
+      };
+
+      evaluator(const XprType& xpr)
+        : m_argImpl(xpr.m_arg)//, m_rows(xpr.rows()), m_cols(xpr.cols())
+      { }
+
+      CoeffReturnType coeff(Index row, Index col) const
+      {
+        switch (row) {
+          case 1:
+            return m_argImpl.coeff(2,col);
+            break;
+          case 2:
+            return -m_argImpl.coeff(1,col);
+            break;
+          case 4:
+            return m_argImpl.coeff(5,col);
+            break;
+          case 5:
+            return -m_argImpl.coeff(4,col);
+            break;
+          default:
+            return 0;
+            break;
+          }
+      }
+
+      evaluator<ArgTypeNestedCleaned> m_argImpl;
+
+    };
+  }
+}
+
+
+template <class ArgType>
+adSxBase<ArgType> apply_adSx(const Eigen::MatrixBase<ArgType>& arg)
+{
+  return adSxBase<ArgType>(arg.derived());
+}
+
+//!------------------------------------------------------------------------------!//
+//!----------------------------------ad(Sy)--------------------------------------!//
+//!------------------------------------------------------------------------------!//
+
+template <class ArgType> class adSyBase;
+
+
+namespace Eigen {
+  namespace internal {
+    template <class ArgType>
+    struct traits<adSyBase<ArgType> >
+    {
+      typedef Eigen::Dense StorageKind;
+      typedef Eigen::MatrixXpr XprKind;
+      typedef typename ArgType::StorageIndex StorageIndex;
+      typedef typename ArgType::Scalar Scalar;
+      enum {
+        Flags = Eigen::ColMajor,
+        RowsAtCompileTime = 6,
+        ColsAtCompileTime = ArgType::RowsAtCompileTime,
+        MaxRowsAtCompileTime = 6,
+        MaxColsAtCompileTime = ArgType::MaxRowsAtCompileTime
+      };
+    };
+  }
+}
+
+
+template <class ArgType>
+class adSyBase : public Eigen::MatrixBase<adSyBase<ArgType> >
+{
+public:
+  adSyBase(const ArgType& arg)
+    : m_arg(arg)
+  {}
+
+  typedef typename Eigen::internal::ref_selector<adSyBase>::type Nested;
+
+  typedef Eigen::Index Index;
+  Index rows() const { return m_arg.rows(); }
+  Index cols() const { return m_arg.cols(); }
+
+  typedef typename Eigen::internal::ref_selector<ArgType>::type ArgTypeNested;
+  ArgTypeNested m_arg;
+};
+
+
+namespace Eigen {
+  namespace internal {
+    template<typename ArgType>
+    struct evaluator<adSyBase<ArgType> >
+      : evaluator_base<adSyBase<ArgType> >
+    {
+      typedef adSyBase<ArgType> XprType;
+      typedef typename nested_eval<ArgType, XprType::ColsAtCompileTime>::type ArgTypeNested;
+      typedef typename remove_all<ArgTypeNested>::type ArgTypeNestedCleaned;
+      typedef typename XprType::CoeffReturnType CoeffReturnType;
+
+      enum {
+        CoeffReadCost = evaluator<ArgTypeNestedCleaned>::CoeffReadCost,
+        Flags = Eigen::ColMajor
+      };
+
+      evaluator(const XprType& xpr)
+        : m_argImpl(xpr.m_arg)//, m_rows(xpr.rows()), m_cols(xpr.cols())
+      { }
+
+      CoeffReturnType coeff(Index row, Index col) const
+      {
+        switch (row) {
+          case 0:
+            return -m_argImpl.coeff(2,col);
+            break;
+          case 2:
+            return m_argImpl.coeff(0,col);
+            break;
+          case 3:
+            return -m_argImpl.coeff(5,col);
+            break;
+          case 5:
+            return m_argImpl.coeff(3,col);
+            break;
+          default:
+            return 0;
+            break;
+          }
+      }
+
+      evaluator<ArgTypeNestedCleaned> m_argImpl;
+
+    };
+  }
+}
+
+
+template <class ArgType>
+adSyBase<ArgType> apply_adSy(const Eigen::MatrixBase<ArgType>& arg)
+{
+  return adSyBase<ArgType>(arg.derived());
+}
+
+//!------------------------------------------------------------------------------!//
+//!----------------------------------ad(Sz)--------------------------------------!//
+//!------------------------------------------------------------------------------!//
+
+template <class ArgType> class adSzBase;
+
+
+namespace Eigen {
+  namespace internal {
+    template <class ArgType>
+    struct traits<adSzBase<ArgType> >
+    {
+      typedef Eigen::Dense StorageKind;
+      typedef Eigen::MatrixXpr XprKind;
+      typedef typename ArgType::StorageIndex StorageIndex;
+      typedef typename ArgType::Scalar Scalar;
+      enum {
+        Flags = Eigen::ColMajor,
+        RowsAtCompileTime = 6,
+        ColsAtCompileTime = ArgType::RowsAtCompileTime,
+        MaxRowsAtCompileTime = 6,
+        MaxColsAtCompileTime = ArgType::MaxRowsAtCompileTime
+      };
+    };
+  }
+}
+
+
+template <class ArgType>
+class adSzBase : public Eigen::MatrixBase<adSzBase<ArgType> >
+{
+public:
+  adSzBase(const ArgType& arg)
+    : m_arg(arg)
+  {}
+
+  typedef typename Eigen::internal::ref_selector<adSzBase>::type Nested;
+
+  typedef Eigen::Index Index;
+  Index rows() const { return m_arg.rows(); }
+  Index cols() const { return m_arg.cols(); }
+
+  typedef typename Eigen::internal::ref_selector<ArgType>::type ArgTypeNested;
+  ArgTypeNested m_arg;
+};
+
+
+namespace Eigen {
+  namespace internal {
+    template<typename ArgType>
+    struct evaluator<adSzBase<ArgType> >
+      : evaluator_base<adSzBase<ArgType> >
+    {
+      typedef adSzBase<ArgType> XprType;
+      typedef typename nested_eval<ArgType, XprType::ColsAtCompileTime>::type ArgTypeNested;
+      typedef typename remove_all<ArgTypeNested>::type ArgTypeNestedCleaned;
+      typedef typename XprType::CoeffReturnType CoeffReturnType;
+
+      enum {
+        CoeffReadCost = evaluator<ArgTypeNestedCleaned>::CoeffReadCost,
+        Flags = Eigen::ColMajor
+      };
+
+      evaluator(const XprType& xpr)
+        : m_argImpl(xpr.m_arg)//, m_rows(xpr.rows()), m_cols(xpr.cols())
+      { }
+
+      CoeffReturnType coeff(Index row, Index col) const
+      {
+        switch (row) {
+          case 0:
+            return m_argImpl.coeff(1,col);
+            break;
+          case 1:
+            return -m_argImpl.coeff(0,col);
+            break;
+          case 3:
+            return m_argImpl.coeff(4,col);
+            break;
+          case 4:
+            return -m_argImpl.coeff(3,col);
+            break;
+          default:
+            return 0;
+            break;
+          }
+      }
+
+      evaluator<ArgTypeNestedCleaned> m_argImpl;
+
+    };
+  }
+}
+
+
+template <class ArgType>
+adSzBase<ArgType> apply_adSz(const Eigen::MatrixBase<ArgType>& arg)
+{
+  return adSzBase<ArgType>(arg.derived());
+}
+
+
+#endif // EIGEN_GEOMETRIC_OPERATOR_MODULE_H

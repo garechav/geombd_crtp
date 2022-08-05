@@ -16,8 +16,15 @@
 #define EIGEN_MPL2_ONLY
 //#define EIGEN_UNROLLING_LIMIT 30
 
+//#include "Eigen/Dense"
 #include "Eigen/Core"
+//#include "../../eigen3/Eigen/Dense"
 #include "geombd/XprHelper.h"
+
+//#include <iostream>
+
+//inline double _sq_, _cq_, _s2_, _c2_, _sc_, _c2s2_;
+
 
 namespace helper
 {
@@ -506,14 +513,16 @@ namespace geo{
                            const Eigen::MatrixBase<Matrix3TypeIn> & MatIn,
                            Eigen::MatrixBase<Matrix3TypeOut> & MatOut)
     {
-      typename Matrix3TypeIn::Scalar a, b, c, d, e, f;
+      typename Matrix3TypeIn::Scalar a, b, c, d, e, f; /// as references
 
       a = MatIn.coeff(0,0);  b = MatIn.coeff(0,1);  c = MatIn.coeff(0,2);
       d = MatIn.coeff(1,1);  e = MatIn.coeff(1,2);  f = MatIn.coeff(2,2);
 
-      ScalarType s2, c2, sc, c2s2, bsc;
+      ScalarType s2, c2, sc, c2s2;
 
       s2 = sq*sq;  c2 = cq*cq;  sc = sq*cq;  c2s2 = c2 - s2;
+
+      ScalarType bsc;
 
       bsc = 2*b*sc;
       MatOut.coeffRef(0,0) = a*c2 - bsc + d*s2;
@@ -756,18 +765,17 @@ namespace geo{
   //! Performing Ad_dual*D_M*Ad statically for Rx joint type
   //!------------------------------------------------------------------------------!//
   // Forward declaration
-  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut> struct D_Mat6ProjRxAlgo;
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeInOut> struct D_Mat6ProjRxAlgo;
 
-  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut>
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeInOut>
   void D_Mat6ProjRx(bool P_z,
                     int nS,
                     Eigen::MatrixBase<Vector3Type> & P_,
                     Eigen::MatrixBase<Matrix3Type> & R_,
-                    const Eigen::MatrixBase<Matrix6TypeIn> & MatIn,
-                    Eigen::MatrixBase<Matrix6TypeOut> & MatOut)
-  { D_Mat6ProjRxAlgo<Vector3Type, Matrix3Type, Matrix6TypeIn, Matrix6TypeOut>::run(P_z, nS, P_, R_, MatIn, MatOut); }
+                    Eigen::MatrixBase<Matrix6TypeInOut> & MatIn)
+  { D_Mat6ProjRxAlgo<Vector3Type, Matrix3Type, Matrix6TypeInOut>::run(P_z, nS, P_, R_, MatIn); }
 
-  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut>
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeInOut>
   struct D_Mat6ProjRxAlgo
   {
   public :
@@ -777,11 +785,10 @@ namespace geo{
                            int nS,
                            Eigen::MatrixBase<Vector3Type> & P_,
                            Eigen::MatrixBase<Matrix3Type> & R_,
-                           const Eigen::MatrixBase<Matrix6TypeIn> & MatIn,
-                           Eigen::MatrixBase<Matrix6TypeOut> & MatOut)
+                           const Eigen::MatrixBase<Matrix6TypeInOut> & MatIn)
     {
-      typedef const Eigen::Block<Matrix6TypeIn,3,3> constBlock3;
-      typedef Eigen::Block<Matrix6TypeOut,3,3> Block3;
+      typedef const Eigen::Block<Matrix6TypeInOut,3,3> constBlock3;
+      typedef Eigen::Block<Matrix6TypeInOut,3,3> Block3;
       //! Linear
       Matrix3Type SkP, Dtmp1;
 
@@ -790,19 +797,20 @@ namespace geo{
       sq = R_.coeffRef(2,1);  cq = R_.coeffRef(1,1);
 
       //! Linear
-      if(P_z)  SkP = Skew(P_);
+      //      if(P_z)  SkP = Skew(P_);
+      if(P_z)  SkP << 0, -P_.coeff(2), P_.coeff(1), P_.coeff(2), 0, -P_.coeff(0), -P_.coeff(1), P_.coeff(0), 0;
 
-      Matrix6TypeIn & MatIn_ = const_cast<Matrix6TypeIn &>(MatIn.derived());
+      Matrix6TypeInOut & MatIn_ = const_cast<Matrix6TypeInOut &>(MatIn.derived());
 
-      for(int iter = 0; iter < nS*6; iter += 6){
+      for(int iter = (nS-1)*6; iter >= 0; iter -= 6){
           constBlock3 & Ai = MatIn_.template block<3,3>(iter,0);
           constBlock3 & Bi = MatIn_.template block<3,3>(iter,3);
           constBlock3 & Di = MatIn_.template block<3,3>(iter+3,3);
 
-          Block3 Ao = MatOut.template block<3,3>(iter,0);
-          Block3 Bo = MatOut.template block<3,3>(iter,3);
-          Block3 Co = MatOut.template block<3,3>(iter+3,0);
-          Block3 Do = MatOut.template block<3,3>(iter+3,3);
+          Block3 Ao = MatIn_.template block<3,3>(iter+6,0);
+          Block3 Bo = MatIn_.template block<3,3>(iter+6,3);
+          Block3 Co = MatIn_.template block<3,3>(iter+9,0);
+          Block3 Do = MatIn_.template block<3,3>(iter+9,3);
 
           Mat3ProjRx(sq, cq, Ai, Ao);
 
@@ -829,18 +837,17 @@ namespace geo{
   //! Performing Ad_dual*D_M*Ad statically for Ry joint type
   //!------------------------------------------------------------------------------!//
   // Forward declaration
-  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut> struct D_Mat6ProjRyAlgo;
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeInOut> struct D_Mat6ProjRyAlgo;
 
-  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut>
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeInOut>
   void D_Mat6ProjRy(bool P_z,
                     int nS,
                     Eigen::MatrixBase<Vector3Type> & P_,
                     Eigen::MatrixBase<Matrix3Type> & R_,
-                    const Eigen::MatrixBase<Matrix6TypeIn> & MatIn,
-                    Eigen::MatrixBase<Matrix6TypeOut> & MatOut)
-  { D_Mat6ProjRyAlgo<Vector3Type, Matrix3Type, Matrix6TypeIn, Matrix6TypeOut>::run(P_z, nS, P_, R_, MatIn, MatOut); }
+                    Eigen::MatrixBase<Matrix6TypeInOut> & MatIn)
+  { D_Mat6ProjRyAlgo<Vector3Type, Matrix3Type, Matrix6TypeInOut>::run(P_z, nS, P_, R_, MatIn); }
 
-  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut>
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeInOut>
   struct D_Mat6ProjRyAlgo
   {
   public :
@@ -850,11 +857,10 @@ namespace geo{
                            int nS,
                            Eigen::MatrixBase<Vector3Type> & P_,
                            Eigen::MatrixBase<Matrix3Type> & R_,
-                           const Eigen::MatrixBase<Matrix6TypeIn> & MatIn,
-                           Eigen::MatrixBase<Matrix6TypeOut> & MatOut)
+                           Eigen::MatrixBase<Matrix6TypeInOut> & MatIn)
     {
-      typedef const Eigen::Block<Matrix6TypeIn,3,3> constBlock3;
-      typedef Eigen::Block<Matrix6TypeOut,3,3> Block3;
+      typedef const Eigen::Block<Matrix6TypeInOut,3,3> constBlock3;
+      typedef Eigen::Block<Matrix6TypeInOut,3,3> Block3;
       //! Linear
       Matrix3Type SkP, Dtmp1;
 
@@ -863,19 +869,20 @@ namespace geo{
       sq = R_.coeffRef(0,2);  cq = R_.coeffRef(0,0);
 
       //! Linear
-      if(P_z)  SkP = Skew(P_);
+      //      if(P_z)  SkP = Skew(P_);
+      if(P_z)  SkP << 0, -P_.coeff(2), P_.coeff(1), P_.coeff(2), 0, -P_.coeff(0), -P_.coeff(1), P_.coeff(0), 0;
 
-      Matrix6TypeIn & MatIn_ = const_cast<Matrix6TypeIn &>(MatIn.derived());
+      Matrix6TypeInOut & MatIn_ = const_cast<Matrix6TypeInOut &>(MatIn.derived());
 
-      for(int iter = 0; iter < nS*6; iter += 6){
+      for(int iter = (nS-1)*6; iter >= 0; iter -= 6){
           constBlock3 & Ai = MatIn_.template block<3,3>(iter,0);
           constBlock3 & Bi = MatIn_.template block<3,3>(iter,3);
           constBlock3 & Di = MatIn_.template block<3,3>(iter+3,3);
 
-          Block3 Ao = MatOut.template block<3,3>(iter,0);
-          Block3 Bo = MatOut.template block<3,3>(iter,3);
-          Block3 Co = MatOut.template block<3,3>(iter+3,0);
-          Block3 Do = MatOut.template block<3,3>(iter+3,3);
+          Block3 Ao = MatIn_.template block<3,3>(iter+6,0);
+          Block3 Bo = MatIn_.template block<3,3>(iter+6,3);
+          Block3 Co = MatIn_.template block<3,3>(iter+9,0);
+          Block3 Do = MatIn_.template block<3,3>(iter+9,3);
 
           Mat3ProjRy(sq, cq, Ai, Ao);
 
@@ -902,18 +909,17 @@ namespace geo{
   //! Performing Ad_dual*D_M*Ad statically for Rz joint type
   //!------------------------------------------------------------------------------!//
   // Forward declaration
-  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut> struct D_Mat6ProjRzAlgo;
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeInOut> struct D_Mat6ProjRzAlgo;
 
-  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut>
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeInOut>
   void D_Mat6ProjRz(bool P_z,
                     int nS,
                     Eigen::MatrixBase<Vector3Type> & P_,
                     Eigen::MatrixBase<Matrix3Type> & R_,
-                    const Eigen::MatrixBase<Matrix6TypeIn> & MatIn,
-                    Eigen::MatrixBase<Matrix6TypeOut> & MatOut)
-  { D_Mat6ProjRzAlgo<Vector3Type, Matrix3Type, Matrix6TypeIn, Matrix6TypeOut>::run(P_z, nS, P_, R_, MatIn, MatOut); }
+                    Eigen::MatrixBase<Matrix6TypeInOut> & MatIn)
+  { D_Mat6ProjRzAlgo<Vector3Type, Matrix3Type, Matrix6TypeInOut>::run(P_z, nS, P_, R_, MatIn); }
 
-  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut>
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeInOut>
   struct D_Mat6ProjRzAlgo
   {
   public :
@@ -923,11 +929,10 @@ namespace geo{
                            int nS,
                            Eigen::MatrixBase<Vector3Type> & P_,
                            Eigen::MatrixBase<Matrix3Type> & R_,
-                           const Eigen::MatrixBase<Matrix6TypeIn> & MatIn,
-                           Eigen::MatrixBase<Matrix6TypeOut> & MatOut)
+                           Eigen::MatrixBase<Matrix6TypeInOut> & MatIn)
     {
-      typedef const Eigen::Block<Matrix6TypeIn,3,3> constBlock3;
-      typedef Eigen::Block<Matrix6TypeOut,3,3> Block3;
+      typedef const Eigen::Block<Matrix6TypeInOut,3,3> constBlock3;
+      typedef Eigen::Block<Matrix6TypeInOut,3,3> Block3;
       //! Linear
       Matrix3Type SkP, Dtmp1;
 
@@ -936,19 +941,20 @@ namespace geo{
       sq = R_.coeffRef(1,0);  cq = R_.coeffRef(0,0);
 
       //! Linear
-      if(P_z)  SkP = Skew(P_);
+      //      if(P_z)  SkP = Skew(P_);
+      if(P_z)  SkP << 0, -P_.coeff(2), P_.coeff(1), P_.coeff(2), 0, -P_.coeff(0), -P_.coeff(1), P_.coeff(0), 0;
 
-      Matrix6TypeIn & MatIn_ = const_cast<Matrix6TypeIn &>(MatIn.derived());
+      Matrix6TypeInOut & MatIn_ = const_cast<Matrix6TypeInOut &>(MatIn.derived());
 
-      for(int iter = 0; iter < nS*6; iter += 6){
+      for(int iter = (nS-1)*6; iter >= 0; iter -= 6){
           constBlock3 & Ai = MatIn_.template block<3,3>(iter,0);
           constBlock3 & Bi = MatIn_.template block<3,3>(iter,3);
           constBlock3 & Di = MatIn_.template block<3,3>(iter+3,3);
 
-          Block3 Ao = MatOut.template block<3,3>(iter,0);
-          Block3 Bo = MatOut.template block<3,3>(iter,3);
-          Block3 Co = MatOut.template block<3,3>(iter+3,0);
-          Block3 Do = MatOut.template block<3,3>(iter+3,3);
+          Block3 Ao = MatIn_.template block<3,3>(iter+6,0);
+          Block3 Bo = MatIn_.template block<3,3>(iter+6,3);
+          Block3 Co = MatIn_.template block<3,3>(iter+9,0);
+          Block3 Do = MatIn_.template block<3,3>(iter+9,3);
 
           Mat3ProjRz(sq, cq, Ai, Ao);
 
@@ -956,6 +962,7 @@ namespace geo{
           Co.noalias() = Do*R_.transpose();
 
           Mat3ProjRz(sq, cq, Di, Do);
+
 
           Bo = Co;
           if(P_z){
@@ -972,21 +979,20 @@ namespace geo{
   };
 
 
-  //! Performing Ad_dual*D_M*Ad statically for Rz joint type
+  //! Performing Ad_dual*D_M*Ad statically for Rxyz joint type
   //!------------------------------------------------------------------------------!//
   // Forward declaration
-  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut> struct D_Mat6ProjRxyzAlgo;
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeInOut> struct D_Mat6ProjRxyzAlgo;
 
-  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut>
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeInOut>
   void D_Mat6ProjRxyz(bool P_z,
                       int nS,
                       Eigen::MatrixBase<Vector3Type> & P_,
                       Eigen::MatrixBase<Matrix3Type> & R_,
-                      const Eigen::MatrixBase<Matrix6TypeIn> & MatIn,
-                      Eigen::MatrixBase<Matrix6TypeOut> & MatOut)
-  { D_Mat6ProjRxyzAlgo<Vector3Type, Matrix3Type, Matrix6TypeIn, Matrix6TypeOut>::run(P_z, nS, P_, R_, MatIn, MatOut); }
+                      Eigen::MatrixBase<Matrix6TypeInOut> & MatIn)
+  { D_Mat6ProjRxyzAlgo<Vector3Type, Matrix3Type, Matrix6TypeInOut>::run(P_z, nS, P_, R_, MatIn); }
 
-  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeIn, typename Matrix6TypeOut>
+  template<typename Vector3Type, typename Matrix3Type, typename Matrix6TypeInOut>
   struct D_Mat6ProjRxyzAlgo
   {
   public :
@@ -996,32 +1002,28 @@ namespace geo{
                            int nS,
                            Eigen::MatrixBase<Vector3Type> & P_,
                            Eigen::MatrixBase<Matrix3Type> & R_,
-                           const Eigen::MatrixBase<Matrix6TypeIn> & MatIn,
-                           Eigen::MatrixBase<Matrix6TypeOut> & MatOut)
+                           Eigen::MatrixBase<Matrix6TypeInOut> & MatIn)
     {
-      typedef const Eigen::Block<Matrix6TypeIn,3,3> constBlock3;
-      typedef Eigen::Block<Matrix6TypeOut,3,3> Block3;
+      typedef const Eigen::Block<Matrix6TypeInOut,3,3> constBlock3;
+      typedef Eigen::Block<Matrix6TypeInOut,3,3> Block3;
       //! Linear
       Matrix3Type SkP, Dtmp1;
 
-      typedef typename Matrix3Type::Scalar MyScalar;
-      MyScalar sq, cq;
-      sq = R_.coeffRef(1,0);  cq = R_.coeffRef(0,0);
-
       //! Linear
-      if(P_z)  SkP = Skew(P_);
+      //      if(P_z)  SkP = Skew(P_);
+      if(P_z)  SkP << 0, -P_.coeff(2), P_.coeff(1), P_.coeff(2), 0, -P_.coeff(0), -P_.coeff(1), P_.coeff(0), 0;
 
-      Matrix6TypeIn & MatIn_ = const_cast<Matrix6TypeIn &>(MatIn.derived());
+      Matrix6TypeInOut & MatIn_ = const_cast<Matrix6TypeInOut &>(MatIn.derived());
 
-      for(int iter = 0; iter < nS*6; iter += 6){
+      for(int iter = (nS-1)*6; iter >= 0; iter -= 6){
           constBlock3 & Ai = MatIn_.template block<3,3>(iter,0);
           constBlock3 & Bi = MatIn_.template block<3,3>(iter,3);
           constBlock3 & Di = MatIn_.template block<3,3>(iter+3,3);
 
-          Block3 Ao = MatOut.template block<3,3>(iter,0);
-          Block3 Bo = MatOut.template block<3,3>(iter,3);
-          Block3 Co = MatOut.template block<3,3>(iter+3,0);
-          Block3 Do = MatOut.template block<3,3>(iter+3,3);
+          Block3 Ao = MatIn_.template block<3,3>(iter+6,0);
+          Block3 Bo = MatIn_.template block<3,3>(iter+6,3);
+          Block3 Co = MatIn_.template block<3,3>(iter+9,0);
+          Block3 Do = MatIn_.template block<3,3>(iter+9,3);
 
           Do.noalias() = R_*Ai; // tmp variable
           Ao.noalias() = Do*R_.transpose();

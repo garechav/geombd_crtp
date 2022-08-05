@@ -81,10 +81,11 @@ int main(){
 
 //  auto ddq_crtp = robotDynamics->ddq;
 //  std::cout<<"ddq = "<<ddq_crtp.cwiseAbs().sum()<<std::endl;
-//  std::cout << std::scientific << std::setprecision(20) << ddq_crtp.transpose() << std::endl;
-//  //!-------------------------------------------------------
+//  std::cout << std::scientific << std::setprecision(20) << ddq_crtp.cwiseAbs().sum() << std::endl;
+  //!-------------------------------------------------------
 //  auto D_ddq_crtp = robotDynamics->D_ddq;
-//  std::cout << "D_ddq_crtp = "<< std::endl<< std::scientific << std::setprecision(20) << D_ddq_crtp << std::endl;
+//  double errr = D_ddq_crtp.cwiseAbs().sum();
+//  std::cout << "D_ddq_crtp = "<< std::endl<< std::scientific << std::setprecision(20) << errr << std::endl;
 
 
 //  //!------------------------------------------------------------------------------!//
@@ -120,7 +121,7 @@ int main(){
 //    }
 
 //  std::cout << "-------------------------- D_ddq" << std::endl;
-//  std::cout << "Analytic: " << D_ddq_.cwiseAbs().sum() << std::endl;
+//  std::cout << "Analytic: " << std::scientific << std::setprecision(20)<< D_ddq_.cwiseAbs().sum() << std::endl;
 //  std::cout << "Numeric: " << numericD_ddq.cwiseAbs().sum() << std::endl;
 //  auto error_in_D_ddq = D_ddq_ - numericD_ddq;
 //  std::cout << "Error: " << error_in_D_ddq.eval().cwiseAbs().sum() << std::endl;

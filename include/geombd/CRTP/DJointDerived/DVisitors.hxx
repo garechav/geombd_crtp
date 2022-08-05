@@ -46,169 +46,217 @@ namespace geo{
   };
 
 
-  //! Visitor for Twist and bias elements at root
+  //! TCP 01 Visitor
+  //!------------------------------------------------------------------------------!//
+  template<typename ScalarType, typename Vector3Type, typename Vector6Type>
+  class D_TCP01_visitor : public boost::static_visitor<int> {
+  public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    D_TCP01_visitor( ) : S_(nullptr), C_(nullptr) {}
+
+    ScalarType vi;    Vector3Type* Sw_;
+    Vector6Type* S_;  Vector6Type* C_;
+
+    template<typename Derived>
+    int operator()(D_CRTPInterface<Derived> & BaseType) const {
+      BaseType.D_TCP01(vi, (*Sw_).derived(), (*S_).derived(), (*C_).derived());
+      return 0;
+    }
+
+  };
+
+//typename Eigen::MatrixBase<Vector3Type> & Sw_,
+  //! TCP 02 Visitor
+  //!------------------------------------------------------------------------------!//
+  template<typename Vector3Type, typename D_Vector6Type>
+  class D_TCP02_visitor : public boost::static_visitor<int> {
+  public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    D_TCP02_visitor( ) : Sw_(nullptr), D_q_c_(nullptr), D_dq_c_(nullptr), D_q_c_aux_(nullptr), D_dq_c_aux_(nullptr) {}
+
+    D_Vector6Type* D_q_c_;    D_Vector6Type* D_q_c_aux_;  Vector3Type* Sw_;
+    D_Vector6Type* D_dq_c_;   D_Vector6Type* D_dq_c_aux_;
+
+    template<typename Derived>
+    int operator()(D_CRTPInterface<Derived> & BaseType) const {
+      BaseType.D_TCP02((*Sw_).derived(), (*D_q_c_).derived(), (*D_dq_c_).derived(), (*D_q_c_aux_).derived(), (*D_dq_c_aux_).derived());
+      return 0;
+    }
+
+  };
+
+
+  //! TCP root Visitor
   //!------------------------------------------------------------------------------!//
   template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type, typename D_Vector6Type>
-  class D_TCP_root_visitor : public boost::static_visitor<int> {
+  class D_TCProot_visitor : public boost::static_visitor<int> {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    D_TCP_root_visitor( ) : S(nullptr), S_i(nullptr), p_(nullptr), M_(nullptr), D_dq_p_(nullptr) {}
+    D_TCProot_visitor( ) : S_(nullptr), T_(nullptr), p_(nullptr), M_(nullptr), D_dq_p_(nullptr) {}
 
     //! Members
-    ScalarType vi;  Vector3Type* S;  Vector6Type* S_i;  Vector6Type* p_;  Matrix6Type* M_;  D_Vector6Type* D_dq_p_;
+    ScalarType vi;  Vector3Type* S_;  Vector6Type* T_;  Vector6Type* p_;  Matrix6Type* M_;  D_Vector6Type* D_dq_p_;
 
     //! Method -> member function
     template<typename Derived>
     int operator()(D_CRTPInterface<Derived> & BaseType) const {
-      BaseType.D_TCP_root(vi, (*S).derived(), (*S_i).derived(), (*p_).derived(), (*M_).derived(), (*D_dq_p_).derived());
+      BaseType.D_TCProot(vi, (*S_).derived(), (*T_).derived(), (*p_).derived(), (*M_).derived(), (*D_dq_p_).derived());
       return 0;
     }
 
   };
 
 
-  //! Visitor for Twist and bias elements.
+  //! Inertia 01 Visitor
   //!------------------------------------------------------------------------------!//
-  template<typename ScalarType, typename Matrix3Type, typename Matrix6Type,
-           typename Vector3Type, typename Vector6Type, typename D_Vector6Type>
-  class D_TwCbPb_visitor : public boost::static_visitor<int> {
+  template<typename Vector3Type, typename Vector6Type, typename Matrix6Type, typename VectorXType, typename D_Matrix6Type>
+  class Inertia01_visitor : public boost::static_visitor<int> {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    D_TwCbPb_visitor( ) : S(nullptr), R_(nullptr), P_(nullptr), S_j(nullptr), M_(nullptr), S_i(nullptr), c_(nullptr), p_(nullptr),
-      D_q_V_(nullptr), D_dq_V_(nullptr), D_q_Vj_(nullptr), D_dq_Vj_(nullptr), D_q_c_(nullptr), D_dq_c_(nullptr),
-      D_q_p_(nullptr), D_dq_p_(nullptr){}
+    Inertia01_visitor( ) : Sw_(nullptr), U_(nullptr), M_A_(nullptr), D_U_v_(nullptr), D_M_A_i_(nullptr) {}
 
     //! Members
-    bool zeroFlag;
-    ScalarType vi;    Matrix3Type* R_;   Vector3Type* P_;  Vector3Type* S;  Vector6Type* S_j;
-    Matrix6Type* M_;  Vector6Type* S_i;  Vector6Type* c_;  Vector6Type* p_;
-    //!-------------------------------------------------------
-    D_Vector6Type* D_q_V_;    D_Vector6Type* D_dq_V_;  D_Vector6Type* D_q_Vj_;  D_Vector6Type* D_q_p_;
-    D_Vector6Type* D_dq_Vj_;  D_Vector6Type* D_q_c_;   D_Vector6Type* D_dq_c_;  D_Vector6Type* D_dq_p_;
+    Vector3Type* Sw_;  Vector6Type* U_;  Matrix6Type* M_A_;  VectorXType* D_U_v_;  D_Matrix6Type* D_M_A_i_;
 
     //! Method -> member function
     template<typename Derived>
     int operator()(D_CRTPInterface<Derived> & BaseType) const {
-      BaseType.D_TwCbPb(zeroFlag, vi, (*S).derived(), (*R_).derived(),  (*P_).derived(), (*S_j).derived(), (*M_).derived(), (*S_i).derived(),
-                        (*c_).derived(), (*p_).derived(), (*D_q_V_).derived(), (*D_dq_V_).derived(), (*D_q_Vj_).derived(),
-                        (*D_dq_Vj_).derived(), (*D_q_c_).derived(), (*D_dq_c_).derived(), (*D_q_p_).derived(), (*D_dq_p_).derived());
+      BaseType.Inertia01((*Sw_).derived(), (*U_).derived(), (*M_A_).derived(), (*D_U_v_).derived(), (*D_M_A_i_).derived());
       return 0;
     }
 
   };
 
 
-  //! Visitor for inertial expressions at leaf.
+  //! Inertia 02 Visitor
   //!------------------------------------------------------------------------------!//
-  template<typename ScalarType, typename Vector3Type, typename Matrix3Type, typename Vector6Type,
-           typename Matrix6Type, typename RowVectorXType, typename D_Vector6Type, typename D_Matrix6Type>
-  class D_InertiaLeaf_visitor : public boost::static_visitor<int> {
+  template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename RowVectorXType, typename D_Vector6Type>
+  class Inertia02_visitor : public boost::static_visitor<int> {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    D_InertiaLeaf_visitor( ) : u(nullptr), iD(nullptr), S(nullptr), U_(nullptr), c_(nullptr), P_a_(nullptr), M_a_(nullptr),
-      P_A_(nullptr), M_A_(nullptr), P_(nullptr), R_(nullptr), P_Aj_(nullptr), M_Aj_(nullptr), D_M_Aj_(nullptr),
-      D_q_u_(nullptr), D_dq_u_(nullptr), D_q_p_(nullptr), D_dq_p_(nullptr), D_q_Pa_(nullptr), D_dq_Pa_(nullptr),
-      D_q_PA_(nullptr), D_dq_PA_(nullptr), D_q_PAj_(nullptr), D_dq_PAj_(nullptr), D_q_c_(nullptr), D_dq_c_(nullptr) {}
+    Inertia02_visitor( ) : Sw_(nullptr), U_(nullptr), P_A_(nullptr), D_invD_(nullptr), D_q_u_(nullptr), D_dq_u_(nullptr),
+      D_U_h_(nullptr), D_q_PA_(nullptr), D_dq_PA_(nullptr) {}
 
     //! Members
-    ScalarType* u;  ScalarType* iD;  ScalarType tau;  Vector3Type* S;  Vector6Type* U_;  Vector6Type* c_;
-    Vector6Type* P_a_;  Matrix6Type* M_a_;  Vector6Type* P_A_;  Matrix6Type* M_A_;
-    bool P_z;  Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* P_Aj_;  Matrix6Type* M_Aj_;
-    //!-------------------------------------------------------
-    D_Matrix6Type* D_M_Aj_;  RowVectorXType* D_q_u_;   RowVectorXType* D_dq_u_;
-    D_Vector6Type* D_q_p_;   D_Vector6Type* D_dq_p_;   D_Vector6Type* D_q_Pa_;   D_Vector6Type* D_dq_Pa_;   D_Vector6Type* D_q_c_;
-    D_Vector6Type* D_q_PA_;  D_Vector6Type* D_dq_PA_;  D_Vector6Type* D_q_PAj_;  D_Vector6Type* D_dq_PAj_;  D_Vector6Type* D_dq_c_;
+    ScalarType* invD_;  ScalarType* u_;  Vector3Type* Sw_;  Vector6Type* U_;  Vector6Type* P_A_;
+    RowVectorXType* D_invD_;  RowVectorXType* D_q_u_;  RowVectorXType* D_dq_u_;
+    D_Vector6Type* D_U_h_;  D_Vector6Type* D_q_PA_;  D_Vector6Type* D_dq_PA_;
 
     //! Method -> member function
     template<typename Derived>
     int operator()(D_CRTPInterface<Derived> & BaseType) const {
-      ScalarType & u_ = (*u);  ScalarType & iD_ = (*iD);
-      BaseType.D_InertiaLeaf(u_, iD_, tau, (*S).derived(), (*U_).derived(), (*c_).derived(), (*P_a_).derived(), (*M_a_).derived(),
-                             (*P_A_).derived(), (*M_A_).derived(), P_z, (*P_).derived(), (*R_).derived(), (*P_Aj_).derived(),
-                             (*M_Aj_).derived(), (*D_M_Aj_).derived(), (*D_q_u_).derived(), (*D_dq_u_).derived(),
-                             (*D_q_p_).derived(), (*D_dq_p_).derived(), (*D_q_Pa_).derived(), (*D_dq_Pa_).derived(),
-                             (*D_q_PA_).derived(), (*D_dq_PA_).derived(), (*D_q_PAj_).derived(), (*D_dq_PAj_).derived(),
-                             (*D_q_c_).derived(), (*D_dq_c_).derived());
+      ScalarType & _u_ = (*u_);  ScalarType & _invD_ = (*invD_);
+      BaseType.Inertia02(_invD_, _u_, (*Sw_).derived(), (*U_).derived(), (*P_A_).derived(), (*D_invD_).derived(), (*D_q_u_).derived(),
+                         (*D_dq_u_).derived(), (*D_U_h_).derived(), (*D_q_PA_).derived(), (*D_dq_PA_).derived());
       return 0;
     }
 
   };
 
 
-  //! Visitor for inertial expressions.
+  //! Inertia 03 Visitor
   //!------------------------------------------------------------------------------!//
-  template<typename ScalarType, typename Vector6iType, typename Vector3Type, typename Matrix3Type, typename Vector6Type,
-           typename Matrix6Type, typename VectorXType, typename RowVectorXType, typename D_Vector6Type, typename D_Matrix6Type>
-  class D_Inertial_visitor : public boost::static_visitor<int> {
+  template<typename IndexType, typename Vector3Type, typename Matrix3Type, typename Vector6Type, typename Matrix6Type, typename D_Matrix6Type>
+  class Inertia03_visitor : public boost::static_visitor<int> {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    D_Inertial_visitor( ) : u(nullptr), iD(nullptr), S(nullptr), U_(nullptr), c_(nullptr), P_a_(nullptr), M_a_(nullptr),
-      P_A_(nullptr), M_A_(nullptr), P_(nullptr), R_(nullptr), P_Aj_(nullptr), M_Aj_(nullptr), D_U_h_(nullptr),
-      D_U_v_(nullptr), D_invD_(nullptr), D_M_A_(nullptr), D_M_Aj_(nullptr){}
+    Inertia03_visitor( ) : Sw_(nullptr), P_(nullptr), R_(nullptr), P_a_(nullptr), P_A_i_(nullptr), M_a_(nullptr),
+      Mtmp_(nullptr), D_M_A_i_(nullptr) {}
 
     //! Members
-    Vector6iType* indexVec;  bool rootFlag;
-    ScalarType* u;  ScalarType* iD;  ScalarType tau;  Vector3Type* S;  Vector6Type* U_;  Vector6Type* c_;
-    Vector6Type* P_a_;  Matrix6Type* M_a_;  Vector6Type* P_A_;  Matrix6Type* M_A_;
-    bool P_z;  Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* P_Aj_;  Matrix6Type* M_Aj_;
-    //!-------------------------------------------------------
-    D_Vector6Type* D_U_h_;  VectorXType* D_U_v_;  RowVectorXType* D_invD_;
-    D_Matrix6Type* D_M_A_;  D_Matrix6Type* D_M_Aj_;
-    //!-------------------------------------------------------
-    RowVectorXType* D_q_u_;   RowVectorXType* D_dq_u_;
-    D_Vector6Type* D_q_Pa_;   D_Vector6Type* D_dq_Pa_;  D_Vector6Type* D_q_c_;   D_Vector6Type* D_q_PA_;
-    D_Vector6Type* D_dq_PA_;  D_Vector6Type* D_q_PAj_;  D_Vector6Type* D_dq_PAj_;  D_Vector6Type* D_dq_c_;
-
+    bool P_z_;  IndexType nS_;  Vector3Type* Sw_;  Vector3Type* P_;  Matrix3Type* R_;
+    Vector6Type* P_a_;  Vector6Type* P_A_i_;  Matrix6Type* M_a_;  Matrix6Type* Mtmp_;  D_Matrix6Type* D_M_A_i_;
 
     //! Method -> member function
     template<typename Derived>
     int operator()(D_CRTPInterface<Derived> & BaseType) const {
-      ScalarType & u_ = (*u);  ScalarType & iD_ = (*iD);
-      BaseType.D_Inertial(rootFlag, (*indexVec).derived(), u_, iD_, tau, (*S).derived(), (*U_).derived(), (*c_).derived(), (*P_a_).derived(),
-                          (*M_a_).derived(), (*P_A_).derived(), (*M_A_).derived(), P_z, (*P_).derived(), (*R_).derived(),
-                          (*P_Aj_).derived(), (*M_Aj_).derived(), (*D_U_h_).derived(), (*D_U_v_).derived(),
-                          (*D_invD_).derived(), (*D_M_A_).derived(), (*D_M_Aj_).derived(), (*D_q_u_).derived(), (*D_dq_u_).derived(),
-                          (*D_q_Pa_).derived(), (*D_dq_Pa_).derived(), (*D_q_PA_).derived(), (*D_dq_PA_).derived(), (*D_q_PAj_).derived(),
-                          (*D_dq_PAj_).derived(), (*D_q_c_).derived(), (*D_dq_c_).derived());
+      BaseType.Inertia03(P_z_, nS_, (*Sw_).derived(), (*P_).derived(), (*R_).derived(), (*P_a_).derived(), (*P_A_i_).derived(),
+                         (*M_a_).derived(), (*Mtmp_).derived(), (*D_M_A_i_).derived());
       return 0;
     }
 
   };
 
 
-  //! Visitor for computing the acceleration at root.
+  //! Leaf 01 Visitor
   //!------------------------------------------------------------------------------!//
-  template<typename ScalarType, typename Vector3Type, typename Matrix3Type, typename Vector6Type,
-           typename D_Vector6Type, typename RowVectorXType, typename MatrixXType>
-  class D_Accel_root_visitor : public boost::static_visitor<int> {
+  template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename Matrix6Type, typename RowVectorXType, typename D_Vector6Type>
+  class Leaf01_visitor : public boost::static_visitor<int> {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    D_Accel_root_visitor( ) : ddq(nullptr), S(nullptr), P_(nullptr), R_(nullptr), U_(nullptr), Acc_i_(nullptr), D_U_h_(nullptr),
-      D_invD_(nullptr), D_q_u_(nullptr), D_dq_u_(nullptr), D_q_A_(nullptr), D_dq_A_(nullptr), D_ddq_(nullptr){}
+    Leaf01_visitor( ) : Sw_(nullptr), U_(nullptr), P_A_(nullptr), M_A_(nullptr), D_q_u_(nullptr), D_dq_u_(nullptr), D_q_PA_(nullptr), D_dq_PA_(nullptr) {}
 
     //! Members
-    ScalarType u, iD;  ScalarType* ddq;
-    Vector3Type* S;  Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* U_;  Vector6Type* Acc_i_;
-    //!-------------------------------------------------------
-    D_Vector6Type* D_U_h_;  RowVectorXType* D_invD_;  RowVectorXType* D_q_u_;  RowVectorXType* D_dq_u_;
-    D_Vector6Type* D_q_A_;  D_Vector6Type* D_dq_A_;  MatrixXType* D_ddq_;
+    ScalarType* invD_;  ScalarType* u_;  Vector3Type* Sw_;  Vector6Type* U_;  Vector6Type* P_A_;  Matrix6Type* M_A_;
+    RowVectorXType* D_q_u_;  RowVectorXType* D_dq_u_;  D_Vector6Type* D_q_PA_;  D_Vector6Type* D_dq_PA_;
 
     //! Method -> member function
     template<typename Derived>
     int operator()(D_CRTPInterface<Derived> & BaseType) const {
-      BaseType.D_AccelRoot(u, iD, ddq, (*S).derived(), (*P_).derived(), (*R_).derived(), (*U_).derived(), (*Acc_i_).derived(),
-                           (*D_U_h_).derived(), (*D_invD_).derived(), (*D_q_u_).derived(), (*D_dq_u_).derived(),
-                           (*D_q_A_).derived(), (*D_dq_A_).derived(), (*D_ddq_).derived());
+      ScalarType & _u_ = (*u_);  ScalarType & _invD_ = (*invD_);
+      BaseType.Leaf01(_invD_, _u_, (*Sw_).derived(), (*U_).derived(), (*P_A_).derived(), (*M_A_).derived(),
+                      (*D_q_u_).derived(), (*D_dq_u_).derived(), (*D_q_PA_).derived(), (*D_dq_PA_).derived());
+      return 0;
+    }
+
+  };
+
+
+  //! Leaf 02 Visitor
+  //!------------------------------------------------------------------------------!//
+  template<typename Vector3Type, typename Matrix3Type, typename Vector6Type, typename Matrix6Type, typename D_Matrix6Type>
+  class Leaf02_visitor : public boost::static_visitor<int> {
+  public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    //! Constructor
+    Leaf02_visitor( ) : Sw_(nullptr), P_(nullptr), R_(nullptr), P_A_i_(nullptr), P_a_(nullptr), M_a_(nullptr),
+      M_A_j_(nullptr), D_M_A_j_(nullptr) {}
+
+    //! Members
+    bool P_z_;  Vector3Type* Sw_;  Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* P_A_i_;  Vector6Type* P_a_;
+    Matrix6Type* M_a_;  Matrix6Type* M_A_j_;  D_Matrix6Type* D_M_A_j_;
+
+    //! Method -> member function
+    template<typename Derived>
+    int operator()(D_CRTPInterface<Derived> & BaseType) const {
+      BaseType.Leaf02(P_z_, (*Sw_).derived(), (*P_).derived(), (*R_).derived(), (*P_A_i_).derived(), (*P_a_).derived(),
+                      (*M_a_).derived(), (*M_A_j_).derived(), (*D_M_A_j_).derived());
+      return 0;
+    }
+
+  };
+
+
+  //! Spatial Acceleration 01 Visitor
+  //!------------------------------------------------------------------------------!//
+  template<typename Vector3Type, typename Vector6Type>
+  class Accel01_visitor : public boost::static_visitor<int> {
+  public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    //! Constructor
+    Accel01_visitor( ) : Sw_(nullptr), AdAj_(nullptr), Aa_(nullptr) {}
+
+    //! Members
+    Vector3Type* Sw_;  Vector6Type* AdAj_;  Vector6Type* Aa_;
+
+    //! Method -> member function
+    template<typename Derived>
+    int operator()(D_CRTPInterface<Derived> & BaseType) const {
+      BaseType.Accel01((*Sw_).derived(), (*AdAj_).derived(), (*Aa_).derived());
       return 0;
     }
 
@@ -217,35 +265,51 @@ namespace geo{
 
   //! Visitor for computing the acceleration.
   //!------------------------------------------------------------------------------!//
-  template<typename ScalarType, typename IndexType, typename Vector3Type, typename Matrix3Type,
-           typename Vector6Type, typename D_Vector6Type, typename RowVectorXType, typename MatrixXType>
-  class D_Accel_visitor : public boost::static_visitor<int> {
+  template<typename ScalarType, typename Vector3Type, typename Vector6Type, typename RowVectorXType, typename D_Vector6Type>
+  class Accel02_visitor : public boost::static_visitor<int> {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     //! Constructor
-    D_Accel_visitor( ) : ddq(nullptr), S(nullptr), P_(nullptr), R_(nullptr), c_(nullptr), U_(nullptr), Acc_i_(nullptr), Acc_j_(nullptr),
-      D_U_h_(nullptr), D_invD_(nullptr), D_ddq_(nullptr), D_q_u_(nullptr), D_dq_u_(nullptr), D_q_c_(nullptr), D_dq_c_(nullptr),
-      D_q_A_(nullptr), D_dq_A_(nullptr), D_q_Aj_(nullptr), D_dq_Aj_(nullptr), Pre_(nullptr), Suc_(nullptr), PreSuc_(nullptr) {}
+    Accel02_visitor( ) : ddq_(nullptr), Sw_(nullptr), A_(nullptr), D_q_A_(nullptr), D_dq_A_(nullptr), D_q_ddq_(nullptr), D_dq_ddq_(nullptr) {}
 
     //! Members
-    bool zeroFlag;  ScalarType u, iD;  ScalarType* ddq;
-    Vector3Type* S;  Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* c_;
-    Vector6Type* U_;  Vector6Type* Acc_i_;  Vector6Type* Acc_j_;
-    //!-------------------------------------------------------
-    bool isLeaf;  IndexType ID;
-    std::vector< IndexType >* Pre_;  std::vector< IndexType >* Suc_;  std::vector< IndexType >* PreSuc_;
-    D_Vector6Type* D_U_h_;   RowVectorXType* D_invD_;  MatrixXType* D_ddq_;
-    RowVectorXType* D_q_u_;  RowVectorXType* D_dq_u_;  D_Vector6Type* D_q_c_;  D_Vector6Type* D_dq_c_;
-    D_Vector6Type* D_q_A_;   D_Vector6Type* D_dq_A_;   D_Vector6Type* D_q_Aj_;  D_Vector6Type* D_dq_Aj_;
+    ScalarType* ddq_;  Vector3Type* Sw_;  Vector6Type* A_;  D_Vector6Type* D_q_A_;   D_Vector6Type* D_dq_A_;  RowVectorXType* D_q_ddq_;  RowVectorXType* D_dq_ddq_;
 
     //! Method -> member function
     template<typename Derived>
     int operator()(D_CRTPInterface<Derived> & BaseType) const {
-      BaseType.D_Accel(ID, zeroFlag, u, iD, ddq, (*S).derived(), (*P_).derived(), (*R_).derived(), (*c_).derived(), (*U_).derived(),
-                       (*Acc_i_).derived(), (*Acc_j_).derived(), isLeaf, Pre_, Suc_, PreSuc_, (*D_U_h_).derived(), (*D_invD_).derived(),
-                       (*D_ddq_).derived(), (*D_q_u_).derived(), (*D_dq_u_).derived(), (*D_q_c_).derived(), (*D_dq_c_).derived(),
-                       (*D_q_A_).derived(), (*D_dq_A_).derived(), (*D_q_Aj_).derived(), (*D_dq_Aj_).derived());
+      BaseType.Accel02(ddq_, (*Sw_).derived(), (*A_).derived(), (*D_q_A_).derived(), (*D_dq_A_).derived(), (*D_q_ddq_).derived(), (*D_dq_ddq_).derived());
+      return 0;
+    }
+  };
+
+
+  //! Visitor for computing the acceleration at root.
+  //!------------------------------------------------------------------------------!//
+  template<typename ScalarType, typename Vector3Type, typename Matrix3Type, typename Vector6Type,
+           typename D_Vector6Type, typename RowVectorXType, typename MatrixXType>
+  class AccelRoot_visitor : public boost::static_visitor<int> {
+  public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    //! Constructor
+    AccelRoot_visitor( ) : ddq(nullptr), S(nullptr), P_(nullptr), R_(nullptr), U_(nullptr), Acc_i_(nullptr), D_U_h_(nullptr),
+      D_invD_(nullptr), D_q_u_(nullptr), D_dq_u_(nullptr), D_q_A_(nullptr), D_dq_A_(nullptr), D_ddq_(nullptr){}
+
+    //! Members
+    ScalarType u, iD;  ScalarType* ddq;
+    Vector3Type* S;  Vector3Type* P_;  Matrix3Type* R_;  Vector6Type* U_;  Vector6Type* Acc_i_;
+    //!-------------------------------------------------------
+    D_Vector6Type* D_U_h_;  RowVectorXType* D_invD_;  RowVectorXType* D_q_u_;  RowVectorXType* D_dq_u_;
+    D_Vector6Type* D_q_A_;  D_Vector6Type* D_dq_A_;   MatrixXType* D_ddq_;
+
+    //! Method -> member function
+    template<typename Derived>
+    int operator()(D_CRTPInterface<Derived> & BaseType) const {
+      BaseType.AccelRoot(u, iD, ddq, (*S).derived(), (*P_).derived(), (*R_).derived(), (*U_).derived(), (*Acc_i_).derived(),
+                         (*D_U_h_).derived(), (*D_invD_).derived(), (*D_q_u_).derived(), (*D_dq_u_).derived(),
+                         (*D_q_A_).derived(), (*D_dq_A_).derived(), (*D_ddq_).derived());
       return 0;
     }
 
